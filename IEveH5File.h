@@ -30,39 +30,42 @@ public:
     vector<string> getDeviceNames();
     vector<string> getDeviceIds();
     vector<string> getDeviceIdForName(string);
-    vector<string> getCalcNames(string);
-
-    IEveDataInfo* getDataInfo(string chain, string xmlid);
-    IEveDataInfo* getDataInfo(string chain, string axisId, string channelId, string normalizeId, string calculation);
-    IEveDataInfo* getDataInfoByName(string chain, string name);
-    IEveDataInfo* getDataInfoByName(string chain, string axisId, string channelId, string normalizeId, string calculation);
-
+    vector<string> getMonitorDeviceIds();
+    vector<string> getPathsForId(string dataId);
+    IEveDataInfo* getDataInfoForPath(string path);
+    IEveDataInfo* getMonitorDataInfo(string);
+//    vector<string> getCalcNames(string);
+//    IEveDataInfo* getDataInfo(string chain, string xmlid);
+//    IEveDataInfo* getDataInfo(string chain, string axisId, string channelId, string normalizeId, string calculation);
+//    IEveDataInfo* getDataInfoByName(string chain, string name);
+//    IEveDataInfo* getDataInfoByName(string chain, string axisId, string channelId, string normalizeId, string calculation);
     IEveData* getData(EveDataInfo*);
-
-    IEveDataInfo* getDeviceInfo(string);
-    IEveDataInfo* getDeviceInfoByName(string);
-    virtual multimap<string, string>& getRootAttributes(){return rootAttributes;};
+    virtual multimap<string, string> getRootAttributes(){return rootAttributes;};
+    virtual multimap<string, string> getChainAttributes(string);
 
 private:
     void open(string);
     bool isOpen;
-    bool haveCalculation(string, string);
-    bool haveDeviceGroup;
+//    bool haveCalculation(string, string);
+    void checkVersion(Group&);
     IEveData* getDataSkipVerify(IEveDataInfo*);
-    list<string> getDatasetFullIds(){return dsList;};
-    list<string> getDatasetIds(string, EVECalc modified=EVEraw);
-    int getAttributes(H5Object&, multimap<string, string>&);
-    void getRootGroups(Group&);
-    void parseDatasets(Group&, string, EVECalc, list<string>&);
-    void parseGroups(Group&, string);
+    // list<string> getDatasetFullIds(){return dsList;};
+    // list<string> getDatasetIds(string, EVECalc modified=EVEraw);
+    vector<string> getGroups(Group& group, string);
+    void openGroup(Group& h5group, string path);
+    void closeGroup(Group& h5group);
+    int getAttributes(H5Location&, multimap<string, string>&);
+    void parseDatasets(Group&, string, map<string, IEveDataInfo *> *idmap, multimap<string, string> *nameidmap);
+    void parseGroupDatasets(Group& group, string prefix, map<string, IEveDataInfo*> *idmap, multimap<string, string> *nameidmap);
+    bool haveGroupWithName(Group& group, string name);
     H5File h5file;
     multimap<string, string> name2xmlid;
     map<string, IEveDataInfo*> xmlidMap; // fulldsname
-    multimap<string, string> chain2Modified;
+    map<string, IEveDataInfo*> monitorxmlidMap; // fulldsname
+//    multimap<string, string> chain2Modified;
     vector<string> chainList;
-    list<string> dsList;
-    list<string> modDsList;
-    list<string> deviceDsList;
+//    list<string> dsList;
+//    list<string> deviceDsList;
     multimap<string, string> rootAttributes;
 };
 #endif // EVEH5FILE_H

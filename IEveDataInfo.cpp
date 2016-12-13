@@ -18,11 +18,14 @@ IEveDataInfo::IEveDataInfo() : calculation(EVEraw), datatype(DTunknown), devtype
     dim1 = 0;
     h5dimensions[0]=0;
     h5dimensions[1]=0;
+    datatype = DTunknown;
+    devtype = DEVTUnknown;
+    dstype = EVEDSTUnknown;
+    isMonitor = false;
 }
 
 void IEveDataInfo::setDataType(DataSet& ds){
 
-    dstype = EVEDSTUnknown;
     try {
         DataSpace dspace = ds.getSpace();
         int rank = dspace.getSimpleExtentNdims();
@@ -61,13 +64,21 @@ void IEveDataInfo::setDataType(DataSet& ds){
                     }
                 }
                 else {
-                    if (H5class == H5T_INTEGER)
-                        datatype = DTint32;
-                    else if (H5class == H5T_FLOAT)
-                        datatype = DTfloat64;
-                    else if (H5class == H5T_STRING)
+                    if (H5class == H5T_INTEGER){
+                        if (memberDtyp == PredType::NATIVE_INT8) datatype = DTint8;
+                        else if (memberDtyp == PredType::NATIVE_UINT8) datatype = DTuint8;
+                        else if (memberDtyp == PredType::NATIVE_INT16) datatype = DTint16;
+                        else if (memberDtyp == PredType::NATIVE_UINT16) datatype = DTuint16;
+                        else if (memberDtyp == PredType::NATIVE_UINT32) datatype = DTuint32;
+                        else if (memberDtyp == PredType::NATIVE_INT32) datatype = DTint32;
+                    }
+                    else if (H5class == H5T_FLOAT){
+                        if (memberDtyp == PredType::NATIVE_FLOAT) datatype = DTfloat32;
+                        else if (memberDtyp == PredType::NATIVE_DOUBLE) datatype = DTfloat64;
+                    }
+                    else if (H5class == H5T_STRING){
                         datatype = DTstring;
-
+                    }
                     ++dim1;
                 }
             }
@@ -78,68 +89,10 @@ void IEveDataInfo::setDataType(DataSet& ds){
             STHROW("DataType unimplemented ");
             break;
         }
+        if (isMonitor) dstype = EVEDSTPCOneColumn;
     }
     catch (Exception error){
         STHROW("Error while trying to check data type; H5 Error: " << error.getDetailMsg() );
     }
 
-}
-
-string IEveDataInfo::toCalcString(EVECalc calc){
-    switch (calc) {
-    case EVEraw:
-        return "raw";
-    case EVEcenter:
-        return "center";
-    case EVEedge:
-        return "edge";
-    case EVEfwhm:
-        return "fwhm";
-    case EVEmaximum:
-        return "max";
-    case EVEminimum:
-        return "min";
-    case EVEpeak:
-        return "peak";
-    case EVEmean:
-        return "mean";
-    case EVEnormalized:
-        return "normalized";
-    case EVEstddev:
-        return "stddev";
-    case EVEsum:
-        return "sum";
-    case EVEmeta:
-        return "meta";
-    default:
-        return "unknown";
-    }
-}
-
-EVECalc IEveDataInfo::toCalcType(string calc){
-    if (calc.compare("raw") == 0)
-        return EVEraw;
-    else if (calc.compare("center") == 0)
-        return EVEcenter;
-    else if (calc.compare("edge") == 0)
-        return EVEedge;
-    else if (calc.compare("fwhm") == 0)
-        return EVEfwhm;
-    else if (calc.compare("max") == 0)
-        return EVEmaximum;
-    else if (calc.compare("min") == 0)
-        return EVEminimum;
-    else if (calc.compare("peak") == 0)
-        return EVEpeak;
-    else if (calc.compare("mean") == 0)
-        return EVEmean;
-    else if (calc.compare("normalized") == 0)
-        return EVEnormalized;
-    else if (calc.compare("stddev") == 0)
-        return EVEstddev;
-    else if (calc.compare("sum") == 0)
-        return EVEsum;
-    else if (calc.compare("meta") == 0)
-        return EVEmeta;
-    return EVEunknown;
 }

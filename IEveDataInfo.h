@@ -23,13 +23,10 @@ public:
     string getId(){return xmlId;};
     string getChannelId(){return channelId;};
     string getNormalizeId(){return normalizeId;};
-    string getCalculation(){return toCalcString(calculation);};
     std::pair<int, int> getDimension(){return std::pair<int, int>(dim0, dim1);};
     EVEDeviceType getDeviceType(){return devtype;};
     EVEDataType getDataType(){return datatype;};
     virtual multimap<string, string>& getAttributes(){return attributes;};
-    static string toCalcString(EVECalc);
-    static EVECalc toCalcType(string);
 
 protected:
     void setDataType(DataSet& ds);
@@ -48,6 +45,7 @@ protected:
     hsize_t dim0; // Anzahl der PosCounts
     hsize_t dim1; // > 1 bei arrayData und EVEDSTPCTwoColumn
     hsize_t h5dimensions[2];
+    bool isMonitor;
     friend class IEveH5File;
 };
 

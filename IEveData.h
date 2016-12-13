@@ -11,8 +11,6 @@ using namespace std;
 
 class IEveData : public IEveDataInfo, public EveData
 {
-    // alle Daten (bei MCAs sind das viele) werden
-    // auf einmal gelesen.
 
 public:
     IEveData(IEveDataInfo&);
@@ -23,7 +21,6 @@ public:
     string getId(){return IEveDataInfo::getId();};
     string getChannelId(){return IEveDataInfo::getChannelId();};
     string getNormalizeId(){return IEveDataInfo::getNormalizeId();};
-    string getCalculation(){return IEveDataInfo::getCalculation();};
     pair<int, int> getDimension(){return IEveDataInfo::getDimension();};
     multimap<std::string, std::string>& getAttributes(){return IEveDataInfo::getAttributes();};
     EVEDeviceType getDeviceType(){return IEveDataInfo::getDeviceType();};

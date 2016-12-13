@@ -17,8 +17,8 @@ IEveData::IEveData(IEveDataInfo& dInfo) : IEveDataInfo(dInfo)
 
 }
 
-IEveData::IEveData(IEveData& dInfo) : IEveDataInfo(dInfo), posPtrHash(dInfo.posPtrHash),
-    intvect(dInfo.intvect), dblvect(dInfo.dblvect), strvect(dInfo.strvect)
+IEveData::IEveData(IEveData& eData) : IEveDataInfo(eData), posPtrHash(eData.posPtrHash),
+    intvect(eData.intvect), dblvect(eData.dblvect), strvect(eData.strvect)
 {
     int count = 2;
     int element_size = 0;
@@ -50,7 +50,7 @@ IEveData::~IEveData()
 
 /**
  * @brief          check if stored data is array data
- * @return         true if is it array data, else false
+ * @return         true if it is array data, else false
  */
 bool IEveData::isArrayData(){
     if ((dstype == EVEDSTPCTwoColumn) || (dstype == EVEDSTArray)) return true;

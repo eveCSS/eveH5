@@ -21,62 +21,65 @@ enum EVEFillType
 */
 enum EVEDeviceType
 {
-    DEVTUnknown,    /**< unknown */
-    DEVTChannel,    /**< channel  */
-    DEVTAxis        /**< axis  */
+    DEVTUnknown,    /** unknown */
+    DEVTChannel,    /** channel  */
+    DEVTAxis        /** axis  */
 };
 /** data type
 *
 */
 enum EVEDataType
 {
-    DTunknown,     /**<  unknown (not existing) type */
-    DTstring,      /**<  (C++) string  */
-    DTint32,       /**<  32bit integer */
-    DTfloat64,     /**<  64bit double */
-    DTint8,        /**<  not used */
-    DTint16,       /**<  not used */
-    DTint64,       /**<  not used */
-    DTuint8,       /**<  not used */
-    DTuint16,      /**<  not used */
-    DTuint32,      /**<  not used */
-    DTuint64,      /**<  not used */
-    DTfloat32      /**<  not used */
+    DTunknown,     /**  unknown (not existing) type */
+    DTstring,      /**  (C++) string  */
+    DTint32,       /**  32bit integer */
+    DTfloat64,     /**  64bit double */
+    DTint8,
+    DTint16,
+    DTint64,
+    DTuint8,
+    DTuint16,
+    DTuint32,
+    DTuint64,
+    DTfloat32
 };
 
 class EveDataInfo
 {
 public:
     virtual ~EveDataInfo(){};
+
     /** get the id as used in the xml-file
      * \return id-string
      */
     virtual std::string getId()=0;
+
     /** get the channel identification string
      * \return channel-id
      */
     virtual std::string getChannelId()=0;
+
     /** get the id of channel used for normalization
      * \return normalization-id
      */
     virtual std::string getNormalizeId()=0;
-    /** get the Calculation name
-     * \return calculation
-     */
-    virtual std::string getCalculation()=0;
+
     /** get the number of rows and columns
       for array data columns is > 1
      * \return rows, columns
      */
     virtual std::pair<int, int> getDimension()=0;
+
     /** get a hash with attributes as key/value pairs
      * \return return a key/value hash
      */
     virtual std::multimap<std::string, std::string>& getAttributes()=0;
+
     /** get the device type (axis, channel)
      * \return device type
      */
     virtual EVEDeviceType getDeviceType()=0;
+
     /** get data type
      * \return datatype
      */
@@ -93,6 +96,7 @@ public:
      * \return array of position references
      */
     virtual std::vector<int> getPosReferences()=0;
+
     /** Get pointer to internal array data (for array data only).
      * Use this to retrieve array data for a single position reference
      * \param posRef position reference for the desired array data
@@ -101,6 +105,7 @@ public:
      * \sa isArrayData()
      */
     virtual int getArrayDataPointer(int posRef, void** ptr)=0;
+
     /** get pointer to internal data container (not for array data).
      * Use this to retrieve a container with all values i.e for all position references
      * \param ptr address where the data pointer will be stored
@@ -143,6 +148,12 @@ public:
      */
     virtual std::vector<std::string> getDeviceIds()=0;
 
+    /** Retrieve the device ids with monitor data.
+     *
+     * \return list of monitored device ids
+     */
+    virtual std::vector<std::string> getMonitorDeviceIds()=0;
+
     /** Retrieve the device id for a given device name.
      *
      * A name may be defined for more than one device (not recommended)
@@ -151,75 +162,43 @@ public:
      */
     virtual std::vector<std::string> getDeviceIdForName(std::string name)=0;
 
-    /** Retrieve used calculations
-     *
-     * \param chain chain name
-     * \return list calculation names
+    /**
+     * @brief getPathsForId get all full paths to data for given id
+     * @param id
+     * @return list of fully qualified dataset names
      */
-    virtual std::vector<std::string> getCalcNames(std::string chain)=0;
+    virtual std::vector<std::string> getPathsForId(std::string id)=0;
 
-    /** Retrieve info about a specific (raw) dataset
-     *
-     * \param chain chain name
-     * \param id device id
-     * \return EveDataInfo object pointer
+    /**
+     * @brief getDataInfoForPath retrieve an info object for a specified data path
+     * @param path
+     * @return EveDataInfo pointer (delete EveDataInfo if not used any more)
      */
-    virtual EveDataInfo* getDataInfo(std::string chain, std::string id)=0;
+    virtual EveDataInfo* getDataInfoForPath(std::string path)=0;
 
-    /** Retrieve info about a specific (raw) dataset using device names
-     *
-     * \param chain chain name
-     * \param name device name
-     * \return EveDataInfo object pointer
+    /**
+     * @brief getMonitorDataInfo retrieve an info object for a monitored device
+     * @param id id of a monitored device
+     * @return  EveDataInfo pointer (delete after use)
      */
-    virtual EveDataInfo* getDataInfoByName(std::string chain, std::string name)=0;
+    virtual EveDataInfo* getMonitorDataInfo(std::string id)=0;
 
-    /** Retrieve info about a specific calculated dataset using device ids
+    /** Retrieve data described by dataInfo
      *
-     * \param chain chain id
-     * \param axisId axis id
-     * \param channelId channel id
-     * \param normalizeId channel id used for normalization
-     * \param calculation desired calculation
-     * \return EveDataInfo object pointer
-     */
-    virtual EveDataInfo* getDataInfo(std::string chain, std::string axisId, std::string channelId, std::string normalizeId, std::string calculation)=0;
-
-    /** Retrieve info about a specific calculated dataset using device names
-     *
-     * \param chain chain name
-     * \param axis axis name
-     * \param channel channel name
-     * \param normalize channel name used for normalization
-     * \param calculation desired calculation
-     * \return EveDataInfo object pointer
-     */
-    virtual EveDataInfo* getDataInfoByName(std::string chain, std::string axis, std::string channel, std::string normalize, std::string calculation)=0;
-
-    /** Retrieve info about a device parameter
-     *
-     * \param id device id
-     * \return EveDataInfo object pointer
-     */
-    virtual EveDataInfo* getDeviceInfo(std::string id)=0;
-
-    /** Retrieve info about a device parameter using device names
-     *
-     * \param name device name
-     * \return EveDataInfo object pointer
-     */
-    virtual EveDataInfo* getDeviceInfoByName(std::string name)=0;
-
-    /** Retrieve data described by a dataInfo object
-     *
-     * \param dataInfo EveDataInfo object pointer
-     * \return EveData object pointer
+     * \param dataInfo EveDataInfo pointer
+     * \return EveData object pointer (delete after use)
      */
     virtual EveData* getData(EveDataInfo* dataInfo)=0;
+
     /** retrieve a hash with root (file) attributes as key/value pairs
      * \return return a key/value hash
      */
-    virtual std::multimap<std::string, std::string>& getRootAttributes()=0;
+    virtual std::multimap<std::string, std::string> getRootAttributes()=0;
+
+    /** retrieve a hash with chain (group) attributes of given chain as key/value pairs
+     * \return return a key/value hash
+     */
+    virtual std::multimap<std::string, std::string> getChainAttributes(std::string chain)=0;
 };
 
 class EveJoinData

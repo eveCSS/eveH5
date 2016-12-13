@@ -9,7 +9,7 @@ QT       -= core gui
 TARGET = eveH5
 TEMPLATE = lib
 
-VERSION += 1.0
+VERSION += 3.0
 DEFINES += EVEH5_LIBRARY
 
 CONFIG += dll
@@ -27,10 +27,17 @@ HEADERS += \
     IEveJoinData.h \
     eveH5.h
 
-unix:INCLUDEPATH += /home/eden/src/hdf5/hdf5-1.8.9/hdf5/include
+#linux-g++-32 {
+#    LIBS +=  -L/home/eden/src/hdf5/hdf5-1.8.9/hdf5/lib-static
+#}
 
-unix:LIBS +=  -L/home/eden/src/hdf5/hdf5-1.8.9/hdf5/lib64-static -lhdf5_cpp \
-    -lhdf5 -lz
+linux-g++-64 {
+    LIBS +=  -L/home/eden/src/hdf5/hdf5-1.8.17/hdf5/lib64
+}
+
+unix:INCLUDEPATH += /home/eden/src/hdf5/hdf5-1.8.17/hdf5/include
+
+LIBS +=  -l:libhdf5_cpp.a -l:libhdf5.a -lz
 
 
 
