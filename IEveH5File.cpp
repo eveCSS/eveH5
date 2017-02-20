@@ -38,7 +38,7 @@ struct enumstruct {
 #define STR_STRUCT_SIZE 45
 #define ENUM_STRUCT_SIZE 21
 
-#define EVEH5VERSIONMAXIMUM 3.99
+#define EVEH5VERSIONMAXIMUM 4.99
 #define EVEH5VERSIONMINIMUM 3.0
 
 EveH5File* EveH5File::openH5File(string name){return new IEveH5File(name);};
