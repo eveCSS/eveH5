@@ -12,7 +12,7 @@ namespace eve {
 class IJoinedData : public JoinedData
 {
 public:
-    IJoinedData(vector<IData*>, FillRule);
+    IJoinedData(vector<Data*>&, FillRule);
     virtual ~IJoinedData();
     string getColumnId(unsigned int);
     IData* getData(unsigned int column);

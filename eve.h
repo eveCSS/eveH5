@@ -210,7 +210,6 @@ public:
 class JoinedData
 {
 public:
-    virtual ~JoinedData(){};
 
     /** join a list of data objects to retrieve a list of data objects with corresponding
      * values. May be used to create table data from single data objects. All data will have the
@@ -220,7 +219,8 @@ public:
      * \param fill desired fill rule
      * \return JoinedData
      */
-    static JoinedData* getJoinedData(std::vector<Data*>* datalist, FillRule fill=NoFill);
+    static JoinedData* getJoinedData(std::vector<Data*>& datalist, FillRule fill=NoFill);
+    virtual ~JoinedData(){};
 
     /** retrieve metadata of a specific column
      *

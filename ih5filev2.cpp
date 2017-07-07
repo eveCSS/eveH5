@@ -8,8 +8,6 @@ namespace eve {
 
 IH5FileV2::IH5FileV2(H5::H5File oh5file, string filename) : IH5File(oh5file, filename)
 {
-    // TODO remove
-    cout << "H5 file version 2: " << h5version << endl;
     sections = {"default", "alternate", "meta"};
 
 }

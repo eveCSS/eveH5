@@ -12,46 +12,26 @@
 
 namespace eve {
 
-JoinedData* JoinedData::JoinedData(vector<Data*>* datalist, FillRule fill){
+JoinedData* JoinedData::getJoinedData(vector<Data*>& datalist, FillRule fill){
 
-//   we need to build a new list to do proper casting
-//   reinterpret_cast<vector<IData*>* >(datalist) won't work
-    vector<IData*> newList;
-    for (vector<Data*>::iterator it = datalist->begin(); it != datalist->end(); ++it)
-        newList.push_back(static_cast<IData*>(*it));
-    JoinedData* joinData = new IJoinedData(newList, fill);
-    return joinData;
+     return new IJoinedData(datalist, fill);
 }
 
-IJoinedData::IJoinedData(vector<IData*> datalist, FillRule fillType)
+IJoinedData::IJoinedData(vector<Data*>& datalist, FillRule fillType)
 {
-
-
-    // 1. Es wird erstmal nur ein Set mit den pos-refs erzeugt, die im joined Data vorhanden sein müssen.
-    //    Dabei wird nach dev-type unterschieden und LastFill oder NanFill beachtet.
-    // 2. Es wird eine Kopie der datalist => joinedDatalist erstellt, die neue Einträge bekommt, wenn auf die Original-Daten
-    //    ein Fill angewendet werden muss.
-    // 3. Wird getColumnPointer (keine Array Daten) aufgerufen, wird geprüft, ob die posRefs übereinstimmen, falls nicht,
-    //    dann wird ein neues IData-Objekt erzeugt, mit dem richtigen LastFill bzw. Nan-Fill gemäß der joined pos-ref-Liste.
-    //    Auch die average/standarddev arrays werden bearbeitet.
-    //    Das neue IData-Objekt kommt in die joined datalist und es wird vermerkt, dass es gecached ist.
-    // 4. Es könnte eine addData() Funktion geben, die es erlaubt ein weiteres Idata hinzuzufügen.
-    //    Kann sein, dass das genauso aufwändig wird, wie die Erzeugung eines neuen JoinedData, dann weg lassen.
-    // 5. Evtl. sollte es noch eine Funktion vector<IData*> getAllData() geben, die die iDataListe aus em Konstruktor zurückgibt.
-    //    Damit kann man dann einen neuen modifizierten JoinedData erzeugen.
-
 
     set<int> channelPosCounts;
     set<int> axisPosCounts;
     set<int> newlist;
 
-    dataList = datalist;    // list of original data objects
-    modDataList = datalist; // list of data objects which may be modified
+    for (vector<Data*>::iterator it=datalist.begin(); it != datalist.end(); ++it){
+        if (*it != NULL) dataList.push_back(static_cast<IData*>(*it));
+    }
+    // dataList             // list of original data objects
+    modDataList = dataList; // list of data objects which may be modified and cached
 
     // fill an ordered unique set with all posCounters, create container
-    for (vector<IData*>::iterator it=datalist.begin(); it != datalist.end(); ++it){
-        if (*it == NULL) continue;
-        // TODO remove Null data objects from dataList and modDataList
+    for (vector<IData*>::iterator it=dataList.begin(); it != dataList.end(); ++it){
         DeviceType deviceType = (*it)->getDeviceType();
         if (deviceType == Channel) {
             channelPosCounts.insert((*it)->posCounts.begin(), (*it)->posCounts.end());

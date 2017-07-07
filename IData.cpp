@@ -80,6 +80,12 @@ IData::IData(IData& data, vector<int> posrefs) : IMetaData(data)
             ++pcidx;
         }
     }
+    else {
+        set<int> setposrefs(posrefs.begin(), posrefs.end());
+        for (int pc : posCounts) {
+            if ((setposrefs.find(pc) != setposrefs.end()) && (posPtrHash.find(pc) != posPtrHash.end())) posPtrHash.erase(pc);
+        }
+    }
     posCounts = posrefs;
 }
 

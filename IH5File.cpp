@@ -735,17 +735,14 @@ void IH5File::readDataPCTwoCol(IData* data){
 }
 
 void IH5File::addExtensionData(IData* data){
-    // cout << "Starting with addExtensionData  " << endl;
+
     string datasetname = data->getH5name();
     if (data->getNormalizeId().size() > 0) datasetname = data->getId();
     string fullh5name = data->getPath() + "averagemeta/" + datasetname + "__AverageCount";
-    //cout << "addExtensionData:  search for: " << fullh5name << endl;
     MetaData *extensionmd = findMetaData(extensionmeta, fullh5name);
     if (extensionmd != NULL){
         IData* avdata = new IData((IMetaData&)*extensionmd);
         readDataPCTwoCol(avdata);
-        // TODO remove
-        //  cout << "addExtensionData:  copyAndFill" << ((IMetaData*)extensionmd)->h5name << endl;
         copyAndFill(avdata, DTint32, INTVECT1, data, DTint32, AVCOUNT);
         copyAndFill(avdata, DTint32, INTVECT2, data, DTint32, AVATT);
     }
@@ -754,8 +751,6 @@ void IH5File::addExtensionData(IData* data){
     if (extensionmd != NULL){
         IData* avdata = new IData((IMetaData&)*extensionmd);
         readDataPCTwoCol(avdata);
-        // TODO remove
-        // cout << "addExtensionData:  " << ((IMetaData*)extensionmd)->h5name << endl;
         copyAndFill(avdata, DTfloat64, DBLVECT1, data, DTfloat64, AVLIMIT);
         copyAndFill(avdata, DTfloat64, DBLVECT2, data, DTfloat64, AVMAXDEV);
     }
@@ -764,18 +759,13 @@ void IH5File::addExtensionData(IData* data){
     if (extensionmd != NULL){
         IData* avdata = new IData((IMetaData&)*extensionmd);
         readDataPCOneCol(avdata);
-        // TODO remove
-        // cout << "addExtensionData:  " << ((IMetaData*)extensionmd)->h5name << endl;
         copyAndFill(avdata, DTint32, INTVECT1, data, DTint32, AVATTPR);
     }
     fullh5name = data->getPath() + "standarddev/" + datasetname + "__Count";
-    cout << "addExtensionData:  search for: " << fullh5name << endl;
     extensionmd = findMetaData(extensionmeta, fullh5name);
     if (extensionmd != NULL){
         IData* avdata = new IData((IMetaData&)*extensionmd);
         readDataPCTwoCol(avdata);
-        // TODO remove
-        // cout << "addExtensionData:  " << ((IMetaData*)extensionmd)->h5name << endl;
         copyAndFill(avdata, DTfloat64, DBLVECT1, data, DTint32, STDDEVCOUNT);
         copyAndFill(avdata, DTfloat64, DBLVECT2, data, DTfloat64, STDDEV);
     }
@@ -870,89 +860,57 @@ void IH5File::copyAndFill(IData *srcdata, eve::DataType srctype, int srccol, IDa
     }
 }
 
-// kopiert die Average(od. ähnl.)-Daten aus dem Average DatenObjekt in das Raw-Datenobjekt und füllt
-// nicht vorhandene Positionen mit Dummies, damit der Array so groß wie der raw-Array wird.
-//void IH5File::copyAndFill(IData *srcdata, int srccol, void* dstvct, eve::DataType dsttype, vector<int> *dstpCts){
-
-//    if ((srcdata->getDataType() != DTint32) && (srcdata->getDataType() != DTfloat64))
-//        STHROW("unsupported datatype, currently only int32 or float64 are supported for data conversion (src)");
-//    if ((dsttype != DTint32) && (dsttype != DTfloat64))
-//        STHROW("unsupported datatype, currently only int32 or float64 are supported for data conversion (dst)");
-
-//    unsigned int srcidx = 0;
-//    vector<int> *srcintvect = NULL;
-//    vector<double>* srcdblvect = NULL;
-
-//    if (srccol == 1){
-// // TODO fix
-////        srcintvect = &(srcdata->intvect);
-//        srcdblvect = &(srcdata->dblvect);
-//    }
-//    else if (srccol == 2){
-//        srcintvect = &(srcdata->intvect2);
-//        srcdblvect = &(srcdata->dblvect2);
-//    }
-//    else
-//        STHROW("copyAndFill: invalid column number");
-
-//    int srcposcountsize = srcdata->posCounts.size();
-//    unsigned int srcsize;
-//    if (srcdata->getDataType() == DTint32)
-//        srcsize = srcintvect->size();
-//    else
-//        srcsize = srcdblvect->size();
-
-//    for (vector<int>::iterator it = dstpCts->begin(); it != dstpCts->end(); ++it){
-//        int dstposcnt = *it;
-//        if ((srcposcountsize > 0) && (dstposcnt == srcdata->posCounts[srcidx])){
-//            if (srcdata->getDataType() == DTint32){
-//                if (dsttype == DTint32)
-//                    ((vector<int>*)dstvct)->push_back(srcintvect->at(srcidx));
-//                else
-//                    ((vector<double>*)dstvct)->push_back((double)srcintvect->at(srcidx));
-//            }
-//            else {
-//                if (dsttype == DTint32) {
-//                    try {
-//                        ((vector<int>*)dstvct)->push_back((int)srcdblvect->at(srcidx));
-//                    } catch (Exception error) {
-//                        if (srcdblvect->at(srcidx) > 0.0)
-//                            ((vector<int>*)dstvct)->push_back(INT_MAX);
-//                        else
-//                            ((vector<int>*)dstvct)->push_back(INT_MIN);
-//                    }
-//                }
-//                else {
-//                    ((vector<double>*)dstvct)->push_back(srcdblvect->at(srcidx));
-//                }
-//            }
-//            ++srcidx;
-//            if (srcidx >= srcsize) --srcidx;
-//            continue;
-//        }
-//        else {
-//            if (dsttype == DTint32)
-//                ((vector<int>*)dstvct)->push_back(-1);
-//            else
-//                ((vector<double>*)dstvct)->push_back(NAN);
-//            continue;
-//        }
-//    }
-//}
-
 vector<string> IH5File::getLogData(){
-    // TODO not yet implemented
+
     vector<string> stringlist;
-    stringlist.push_back("log not implemented");
+    StrType tid1(0, H5T_VARIABLE);
+    hid_t		native_type;
+    hsize_t dims;
+    DataSet h5dset;
+
+    try {
+        h5dset = h5file.openDataSet("/LiveComment");
+    }
+    catch (Exception error) {
+        return stringlist;
+    }
+
+    H5::DataType h5dtype = h5dset.getDataType();
+    h5dset.getSpace().getSimpleExtentDims( &dims, NULL);
+    size_t element_size = h5dtype.getSize();
+
+    /* Construct native type */
+    if((native_type=H5Tget_native_type(h5dtype.getId(), H5T_DIR_DEFAULT)) < 0 )
+        cerr << "get LiveComment: H5Tget_native_type  failed!!! " << endl;
+
+    /* Check if the data type is equal */
+    if(!H5Tequal(native_type, tid1.getId()))
+        cerr << "get LiveComment: native type is not var length string!!!" << endl;
+
+    char *rdata[dims];   /* Information read in */
+    try {
+        h5dset.read((void*)rdata, h5dtype);
+    }
+    catch (Exception error) {
+        stringlist.push_back("error reading LiveComment");
+        return stringlist;
+    }
+    /* Validate and print data read in */
+    cout << "data read:" << endl;
+    for(unsigned i=0; i<dims; i++) {
+        stringlist.push_back(string(rdata[i]));
+        free(rdata[i]);
+    }
+    cout << endl;
     return stringlist;
 }
 
 JoinedData* IH5File::getJoinedData(vector<MetaData*>& mdvec, FillRule fill){
 
-    vector<IData*> datavect;
+    vector<Data*> datavect;
     for (vector<MetaData*>::iterator mdit=mdvec.begin(); mdit != mdvec.end(); ++mdit){
         Data* idat = getData((IMetaData*)*mdit);
-        if (idat != NULL) datavect.push_back((IData*)idat);
+        if (idat != NULL) datavect.push_back((Data*)idat);
     }
     if (datavect.size() > 0)
         cout << "Create joined data " << endl;
