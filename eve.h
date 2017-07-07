@@ -24,9 +24,9 @@ enum FillRule
 */
 enum DeviceType
 {
-    Unknown,    /** unknown */
-    Channel,    /** channel  */
-    Axis        /** axis  */
+    Unknown,    /**< unknown */
+    Channel,    /**< channel  */
+    Axis        /**< axis  */
 };
 
 /** section (data to work with)
@@ -34,9 +34,10 @@ enum DeviceType
 */
 enum Section
 {
-    Standard,    /** standard data */
-    Snapshot,    /** snapshot data */
-    Monitor,     /** monitor data  */
+    Standard,    /**< standard data */
+    Snapshot,    /**< snapshot data */
+    Monitor,     /**< monitor data  */
+    Timestamp,   /**< Timestamps    */
 };
 
 /** data type
@@ -44,10 +45,10 @@ enum Section
 */
 enum DataType
 {
-    DTunknown,     /**  unknown (not existing) type */
-    DTstring,      /**  (C++) string  */
-    DTint32,       /**  32bit integer */
-    DTfloat64,     /**  64bit double */
+    DTunknown,     /**<  unknown type */
+    DTstring,      /**<  (C++) string  */
+    DTint32,       /**<  32bit integer */
+    DTfloat64,     /**<  64bit double */
     DTint8,
     DTint16,
     DTint64,
@@ -94,10 +95,15 @@ public:
      */
     virtual std::pair<int, int> getDimension()=0;
 
+    /** get section
+     * \return name
+     */
+    virtual Section getSection()=0;
+
     /** get a hash with attributes as key/value pairs
      * \return return a key/value hash
      */
-    virtual std::multimap<std::string, std::string>& getAttributes()=0;
+    virtual std::map<std::string, std::string>& getAttributes()=0;
 
     /** get the device type (axis, channel)
      * \return device type
@@ -156,116 +162,48 @@ public:
     /** get maximum allowed attempts for limit measurements
      * \return list of maximum allowed attempts
      */
-    virtual std::vector<int> getAverageMaxAttempts()=0;
+    virtual std::vector<int> getAverageAttemptsPreset()=0;
 
     /** get used attempts for limit measurements
      * \return list of used attempts
      */
     virtual std::vector<int> getAverageAttempts()=0;
 
+    /** get preset count of measurements for average measurements
+     * \return list of counts
+     */
+    virtual std::vector<int> getAverageCountPreset()=0;
+
     /** get used measurement count for limit measurements
      * \return list of used counts
      */
     virtual std::vector<int> getAverageCount()=0;
 
-    /** get preset count of measurements for average measurements
-     * \return list of counts
-     */
-    virtual std::vector<int> getAverageMaxCount()=0;
-
     /** get preset limit
      * \return list of preset limits
      */
-    virtual std::vector<double> getAverageLimit()=0;
+    virtual std::vector<double> getAverageLimitPreset()=0;
 
     /** get preset allowed maximum deviation
      * \return list of allowed maximum deviation
      */
-    virtual std::vector<double> getAverageMaxDeviation()=0;
+    virtual std::vector<double> getAverageMaxDeviationPreset()=0;
 
 
     /** get count of measurements for interval detectors
      * \return list of counts
      */
-    virtual std::vector<double> getStddevCount()=0;
+    virtual std::vector<int> getStddevCount()=0;
 
     /** get standard deviation for interval detectors
      * \return list of standard deviation
      */
     virtual std::vector<double> getStddeviation()=0;
 
-};
-
-class DataFile {
-public:
-    virtual ~DataFile(){};
-
-    /** Open a Data File (usually H5 format).
-     * \param name Name of file to open
-     * \return DataFile object
+    /** get length of trigger interval in s
+     * \return list of trigger interval
      */
-    static DataFile* openFile(std::string name);
-
-    /** Retrieve chain ids.
-     * \return list of available chains
-     */
-    virtual std::vector<std::string> getChains()=0;
-
-    /** Retrieve selected chain.
-     * \return id of selected chain
-     */
-    virtual int getChain()=0;
-
-    /** set chain as selected chain (chain 1 selected as default).
-     * \param chain id of an available chain
-     */
-    virtual void setChain(int chain)=0;
-
-    /** retrieve a hash with metadata of selected chain as key/value pairs
-     * \return return a key/value hash
-     */
-    virtual std::multimap<std::string, std::string> getChainMetaData()=0;
-
-    /** retrieve a hash with file metadata  as key/value pairs
-     * \return return a key/value hash
-     */
-    virtual std::multimap<std::string, std::string> getFileMetaData()=0;
-
-    /**
-     * @brief getMetaData retrieve metadata objects for the specified section in selected chain
-     * @param section
-     * @param filter select only metadata which contain this string as XML-ID
-     * @return MetaData list of metadata pointers
-     */
-    virtual std::vector<MetaData *> getMetaData(Section section, std::string filter="")=0;
-
-    /** Retrieve a list of data objects
-     *
-     * \param metadatalist list of metadata to retrieve data for
-     * \return list of data pointers (delete after use)
-     */
-    virtual std::vector<Data*> getData(std::vector<MetaData*> metadatalist)=0;
-
-    /** Retrieve joined data for given metada
-     *
-     * \param metadatalist list of metadata to retrieve data for
-     * \param fill desired fill rule
-     * \return list of data pointers (delete after use)
-     */
-    virtual JoinedData* getJoinedData(std::vector<MetaData*> metadatalist, FillRule fill=NoFill)=0;
-
-    /** Retrieve joined data for data marked as preferred in selected chain
-     *
-     * \param fill desired fill rule
-     * \return list of data pointers (delete after use)
-     */
-    virtual JoinedData* getPreferredData(FillRule fill=NoFill)=0;
-
-    /** Retrieve joined data for data marked as preferred in selected chain
-     *
-     * \return list of data pointers (delete after use)
-     */
-    virtual std::vector<std::string> getLogData()=0;
+    virtual std::vector<double> getTriggerIntv()=0;
 
 };
 
@@ -274,13 +212,15 @@ class JoinedData
 public:
     virtual ~JoinedData(){};
 
-    /** join a list of single-column data objects to retrieve multi-column data
+    /** join a list of data objects to retrieve a list of data objects with corresponding
+     * values. May be used to create table data from single data objects. All data will have the
+     * same number of values.
      *
      * \param datalist list with Data objects
      * \param fill desired fill rule
      * \return JoinedData
      */
-    static JoinedData* getCombinedData(std::vector<Data*>* datalist, FillRule fill=NoFill);
+    static JoinedData* getJoinedData(std::vector<Data*>* datalist, FillRule fill=NoFill);
 
     /** retrieve metadata of a specific column
      *
@@ -289,16 +229,15 @@ public:
      */
     virtual MetaData* getMetaData(unsigned int col)=0;
 
-    /** get pointer to internal data container of the specified column.
+    /** get the data object of the specified column.
      *
-     * Use this to retrieve a container with all values i.e for all position references
-     * Use getColumnType() to retrieve the type of the container
+     * Use this to retrieve a data object with values as specified in fill rule
+     * Use getColumnType() to retrieve the type of the data
      * \param col column number (start with 0)
-     * \param ptr address where the data pointer will be stored
-     * \return number of values in the array or -1 if array data
+     * \return pointer to data or NULL if an error occurs
      * \sa getColumnType()
      */
-    virtual int getColumnPointer(unsigned int col, void** ptr)=0;
+    virtual Data* getData(unsigned int col)=0;
 
     /** Retrieve the number of columns
      *
@@ -312,17 +251,79 @@ public:
      */
     virtual unsigned int getValueCount()=0;
 
-    /** Retrieve the datatype of a specific column
-     *
-     * \param col column number (start with 0)
-     * \return datatype
-     */
-    virtual DataType getColumnType(unsigned int col)=0;
+};
 
-    /** retrieve position references
-     * \return array of position references
+
+class DataFile {
+public:
+    virtual ~DataFile(){};
+
+    /** Open a Data File (usually H5 format).
+     * \param name Name of file to open
+     * \return DataFile object
      */
-    virtual std::vector<int> getPosReferences()=0;
+    static DataFile* openFile(std::string name);
+
+    /** get a list of all available chains.
+     * \return list of chains
+     */
+    virtual std::vector<int> getChains()=0;
+
+    /** Retrieve selected chain.
+     * \return id of selected chain
+     */
+    virtual int getChain()=0;
+
+    /** Set chain as selected chain (chain 1 selected as default).
+     * \param chain id of an available chain
+     */
+    virtual void setChain(int chain)=0;
+
+    /** Retrieve a hash with metadata of selected chain as key/value pairs.
+     * \return return a key/value hash
+     */
+    virtual std::map<std::string, std::string> getChainMetaData()=0;
+
+    /** Retrieve a hash with file metadata  as key/value pairs.
+     * \return return a key/value hash
+     */
+    virtual std::map<std::string, std::string> getFileMetaData()=0;
+
+    /**
+     * @brief Retrieve metadata objects for the specified section in selected chain.
+     * @param section
+     * @param filter select only metadata which contain this string as XML-ID
+     * @return MetaData list of metadata pointers
+     */
+    virtual std::vector<MetaData *> getMetaData(Section section, std::string filter="")=0;
+
+    /** Retrieve a list of data objects.
+     *
+     * \param metadatalist list of metadata to retrieve data for
+     * \return list of data pointers (delete after use)
+     */
+    virtual std::vector<Data*> getData(std::vector<MetaData*>& metadatalist)=0;
+
+    /** Retrieve joined data for given metada.
+     *
+     * \param metadatalist list of metadata to retrieve data for
+     * \param fill desired fill rule
+     * \return list of data pointers (delete after use)
+     */
+    virtual JoinedData* getJoinedData(std::vector<MetaData*>& metadatalist, FillRule fill=NoFill)=0;
+
+    /** Retrieve joined data for data marked as preferred in selected chain.
+     *
+     * \param fill desired fill rule
+     * \return list of data pointers (delete after use)
+     */
+    virtual JoinedData* getPreferredData(FillRule fill=NoFill)=0;
+
+    /** Retrieve log
+     *
+     * \return list of log messages
+     */
+    virtual std::vector<std::string> getLogData()=0;
 
 };
 

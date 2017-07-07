@@ -14,18 +14,30 @@ DEFINES += EVEH5_LIBRARY
 
 CONFIG += dll
 
+QMAKE_CXXFLAGS += -std=c++11
+
 SOURCES += \
-    IEveDataInfo.cpp \
-    IEveData.cpp \
-    IEveH5File.cpp \
-    IEveJoinData.cpp
+    IFile.cpp \
+    IData.cpp \
+    IH5File.cpp \
+    IJoinedData.cpp \
+    IMetaData.cpp \
+    ih5filev2.cpp \
+    ih5filev3.cpp \
+    ih5filev4.cpp \
+    ih5filev5.cpp
 
 HEADERS += \
-    IEveDataInfo.h \
-    IEveData.h \
-    IEveH5File.h \
-    IEveJoinData.h \
-    eveH5.h
+    eve.h \
+    IFile.h \
+    IData.h \
+    IH5File.h \
+    IMetaData.h \
+    IJoinedData.h \
+    ih5filev2.h \
+    ih5filev3.h \
+    ih5filev4.h \
+    ih5filev5.h
 
 #linux-g++-32 {
 #    LIBS +=  -L/home/eden/src/hdf5/hdf5-1.8.9/hdf5/lib-static

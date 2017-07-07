@@ -3,7 +3,7 @@
 
 #include <vector>
 #include "eveH5.h"
-#include "IEveData.h"
+#include "IData.h"
 
 using namespace std;
 
