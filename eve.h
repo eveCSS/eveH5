@@ -10,7 +10,8 @@
  *
  * \section intro_sec Introduction
  *
- * EVE Data Interface is a C++ Interface to read data written with eveCSS
+ * EVE Data Interface is a C++ Interface to read data written with eveCSS.
+ *
  * It consists of an API description, which must be included into the the users
  * C++ application and a shared library, which will be loaded at run-time.
  *
