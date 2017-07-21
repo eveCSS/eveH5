@@ -19,7 +19,6 @@ IData::IData(IMetaData& dInfo) : IMetaData(dInfo)
 {
 }
 
-// reduce or extent the data
 /**
  * @brief          reduce or extent the data to the new list of posrefs
  * posrefs         list of new posrefs
@@ -82,11 +81,13 @@ IData::IData(IData& data, vector<int> posrefs) : IMetaData(data)
     }
     else {
         set<int> setposrefs(posrefs.begin(), posrefs.end());
-        for (int pc : posCounts) {
-            if ((setposrefs.find(pc) != setposrefs.end()) && (posPtrHash.find(pc) != posPtrHash.end())) posPtrHash.erase(pc);
+        posPtrHash = data.posPtrHash;
+        for (int pc : data.posCounts) {
+            if ((setposrefs.find(pc) == setposrefs.end()) && (posPtrHash.find(pc) != posPtrHash.end())) posPtrHash.erase(pc);
         }
     }
     posCounts = posrefs;
+    dim0 = posCounts.size();
 }
 
 IData::~IData()
@@ -96,20 +97,40 @@ IData::~IData()
 
 /**
  * @brief          retrieve a pointer to stored array data
- * @param posRef   corresponding position reference
+ * @param posRef   row counter
  * @param ptr      pointer to a location where the data container will be stored
  * @return         count of container members or -1 if an error occured
  */
-int IData::getArrayDataPointer(int posRef, void** ptr)
+void* IData::getArrayDataPointer(unsigned int row)
 {
-    if (isArrayData()){
-        map<int, void*>::iterator it = posPtrHash.find(posRef);
+    void *ptr=NULL;
+    if (isArrayData() && row < posCounts.size()){
+        int posRef = posCounts[row];
+        map<int, shared_ptr<char>>::iterator it = posPtrHash.find(posRef);
         if ( it != posPtrHash.end()) {
-            *ptr = it->second;
-            return dim1;
+            if (datatype == DTint32)
+                ptr = new vector<int>((int*)it->second.get(), (int*)it->second.get()+dim1);
+            else if (datatype == DTfloat64)
+                ptr = new vector<double>((double*)it->second.get(), (double*)it->second.get()+dim1);
+            else if (datatype == DTint8)
+                ptr = new vector<char>((char*)it->second.get(), (char*)it->second.get()+dim1);
+            else if (datatype == DTint16)
+                ptr = new vector<short>((short*)it->second.get(), (short*)it->second.get()+dim1);
+            else if (datatype == DTint64)
+                ptr = new vector<long long>((long long*)it->second.get(), (long long*)it->second.get()+dim1);
+            else if (datatype == DTuint8)
+                ptr = new vector<unsigned char>((unsigned char*)it->second.get(), (unsigned char*)it->second.get()+dim1);
+            else if (datatype == DTuint16)
+                ptr = new vector<unsigned short>((unsigned short*)it->second.get(), (unsigned short*)it->second.get()+dim1);
+            else if (datatype == DTuint32)
+                ptr = new vector<unsigned int>((unsigned int*)it->second.get(), (unsigned int*)it->second.get()+dim1);
+            else if (datatype == DTuint64)
+                ptr = new vector<unsigned long long>((unsigned long long*)it->second.get(), (unsigned long long*)it->second.get()+dim1);
+            else if (datatype == DTfloat32)
+                ptr = new vector<float>((float*)it->second.get(), (float*)it->second.get()+dim1);
         }
     }
-    return -1;
+    return ptr;
 }
 
 /**
@@ -118,24 +139,21 @@ int IData::getArrayDataPointer(int posRef, void** ptr)
  * @param col   column, if multicolumn data
  * @return      count of container members or -1 if an error occured
  */
-int IData::getDataPointer(void** ptr, int col)
+void* IData::getDataPointer()
 {
-    *ptr = NULL;
-    if (!isArrayData() && (col >= 0)) {
-        if ((datatype == DTint32) && (intsptrmap.find(col) != intsptrmap.end())) {
-                *ptr = intsptrmap.at(col).get();
-                return intsptrmap.at(col)->size();
+    void *ptr = NULL;
+    if (!isArrayData()) {
+        if ((datatype == DTint32) && (intsptrmap.find(0) != intsptrmap.end())) {
+            ptr = new vector<int>(*intsptrmap.at(0));
         }
-        else if ((datatype == DTfloat64) && (dblsptrmap.find(col) != dblsptrmap.end())) {
-                *ptr = dblsptrmap.at(col).get();
-                return dblsptrmap.at(col)->size();
+        else if ((datatype == DTfloat64) && (dblsptrmap.find(0) != dblsptrmap.end())) {
+            ptr = new vector<double>(*dblsptrmap.at(0));
         }
-        else if ((datatype == DTstring) && (strsptrmap.find(col) == strsptrmap.end())){
-                *ptr = strsptrmap.at(col).get();
-                return strsptrmap.at(col)->size();
+        else if ((datatype == DTstring) && (strsptrmap.find(0) == strsptrmap.end())){
+            ptr = new vector<string>(*strsptrmap.at(0));
         }
     }
-    return -1;
+    return ptr;
 }
 
 vector<int> IData::getAverageAttemptsPreset(){

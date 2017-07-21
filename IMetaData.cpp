@@ -51,7 +51,6 @@ IMetaData::IMetaData(string basep, string calc, string h5n, map<string, string> 
     if (attributes.count("Name") > 0)
         name = attributes.find("Name")->second;
 
-    // device data
     if (xmlId.empty()) xmlId = h5name;
 
     if (attributes.count("DeviceType") > 0) {

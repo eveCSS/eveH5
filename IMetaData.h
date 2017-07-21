@@ -27,7 +27,7 @@ public:
     virtual string getId(){return xmlId;};
     virtual string getChannelId(){return channelId;};
     virtual string getNormalizeId(){return normalizeId;};
-    virtual pair<int, int> getDimension(){return pair<int, int>(dim0, dim1);};
+    virtual pair<unsigned int, unsigned int> getDimension(){return pair<unsigned int, unsigned int>(dim0, dim1);};
     virtual Section getSection(){return selSection;};
     virtual map<string, string>& getAttributes(){return attributes;};
     virtual DeviceType getDeviceType(){return devtype;};

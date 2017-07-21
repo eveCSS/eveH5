@@ -10,7 +10,6 @@ IH5FileV5::IH5FileV5(H5::H5File oh5file, string filename) : IH5FileV4(oh5file, f
 void IH5FileV5::addExtensionData(IData* data){
 
     string fullh5name = data->getPath() + "averagemeta/" + data->getH5name() + "__AverageCount";
-    // cout << "addExtensionData:  search for: " << fullh5name << endl;
     MetaData *extensionmd = findMetaData(extensionmeta, fullh5name);
     if (extensionmd != NULL){
         IData* avdata = new IData((IMetaData&)*extensionmd);

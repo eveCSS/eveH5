@@ -448,18 +448,25 @@ void IH5File::readDataArray(IData* data){
         catch (...){
             STHROW("Unknown H5 Error in Dataset " << objname);
         }
-        if ((dims_out[1] > 1) || (data->h5dimensions[0] != dims_out[0]) || (data->h5dimensions[1] != dims_out[1]))
+        if ((dims_out[1] > 1) || (data->h5dimensions[0] != dims_out[0]) || (data->h5dimensions[1] != dims_out[1])){
             STHROW("Error: Unexpected dimension in Dataset " << objname);
-        if ((data->datatype == DTint32) && (element_size != sizeof(int)))
-            STHROW("Error: Unexpected integer size in Dataset " << objname);
-        if ((data->datatype == DTfloat64) && (element_size != sizeof(double)))
-            STHROW("Error: Unexpected float size in Dataset " << objname);
+        }
 
-        void* memBuffer = malloc(element_size * dims_out[0]);
-        if (memBuffer == NULL)
+        if ((data->datatype == DTint32) && (element_size != sizeof(int))){
+            STHROW("Error: Unexpected integer size in Dataset " << objname);
+        }
+        else if ((data->datatype == DTfloat64) && (element_size != sizeof(double))){
+            STHROW("Error: Unexpected float size in Dataset " << objname);
+        }
+
+        std::shared_ptr<char> memBuffer(new char[element_size * dims_out[0]], std::default_delete<char[]>() );
+        // std::shared_ptr<char> memBuffer(new char[element_size * dims_out[0]], array_deleter<char>() );
+
+        if (memBuffer.get() == NULL){
             STHROW("Unable to allocate memory when reading Dataset " << objname);
+        }
         try {
-            h5dset.read(memBuffer, h5dtype);
+            h5dset.read(memBuffer.get(), h5dtype);
         }
         catch (DataSetIException error){
             STHROW("Error reading Dataset " << objname << " H5 Error: " << error.getDetailMsg() );
@@ -467,62 +474,12 @@ void IH5File::readDataArray(IData* data){
         catch (...){
             STHROW("Unknown error while reading DataSet: " << objname);
         }
-        data->posPtrHash.insert(pair<int, void*>(posCnt, memBuffer));
+        data->posPtrHash.insert(pair<int, shared_ptr<char>>(posCnt, memBuffer));
     }
     closeGroup(dsgroup);
     sort(begin(data->posCounts), end(data->posCounts));
 
 
-//    for (vector<int>::iterator it = data->posCounts.begin(); it != data->posCounts.end(); ++it){
-//        ostringstream fullname;
-//        DataSet h5dset;
-//        H5::DataType h5dtype;
-
-//        fullname << data->getFQH5Name() << "/" << *it;
-//        string objname = fullname.str();
-
-//        try {
-//            h5dset = h5file.openDataSet(objname);
-//            h5dset.getSpace().getSimpleExtentDims( dims_out, NULL);
-//            h5dtype = h5dset.getDataType();
-//            element_size = h5dtype.getSize();
-//        }
-//        catch (DataSetIException error){
-//            STHROW("H5 DataSet error while reading Dataset " << objname << " H5 Error: " << error.getDetailMsg() );
-//        }
-//        catch (DataTypeIException error){
-//            STHROW("H5 Datatype error while reading Dataset " << objname << " H5 Error: " << error.getDetailMsg() );
-//        }
-//        catch (DataSpaceIException error){
-//            STHROW("Error reading H5 Dataspace in Dataset " << objname << " H5 Error: " << error.getDetailMsg() );
-//        }
-//        catch (FileIException error){
-//            STHROW("Unable to open H5 DataSet: " << objname << " H5 Error: " << error.getDetailMsg() );
-//        }
-//        catch (...){
-//            STHROW("Unknown H5 Error in Dataset " << objname);
-//        }
-//        if ((dims_out[1] > 1) || (data->h5dimensions[0] != dims_out[0]) || (data->h5dimensions[1] != dims_out[1]))
-//            STHROW("Error: Unexpected dimension in Dataset " << objname);
-//        if ((data->datatype == DTint32) && (element_size != sizeof(int)))
-//            STHROW("Error: Unexpected integer size in Dataset " << objname);
-//        if ((data->datatype == DTfloat64) && (element_size != sizeof(double)))
-//            STHROW("Error: Unexpected float size in Dataset " << objname);
-
-//        void* memBuffer = malloc(element_size * dims_out[0]);
-//        if (memBuffer == NULL)
-//            STHROW("Unable to allocate memory when reading Dataset " << objname);
-//        try {
-//            h5dset.read(memBuffer, h5dtype);
-//        }
-//        catch (DataSetIException error){
-//            STHROW("Error reading Dataset " << objname << " H5 Error: " << error.getDetailMsg() );
-//        }
-//        catch (...){
-//            STHROW("Unknown error while reading DataSet: " << objname);
-//        }
-//        data->posPtrHash.insert(pair<int, void*>(*it, memBuffer));
-//    }
 }
 
 void IH5File::readDataPCOneCol(IData* data){
@@ -784,10 +741,7 @@ void IH5File::copyAndFill(IData *srcdata, eve::DataType srctype, int srccol, IDa
     if ((srctype == dsttype) && (srcPosCounts.size() == dstPosCounts.size()) && (srcPosCounts == dstPosCounts)){
         if (dsttype == DTint32){
             if (dstdata->intsptrmap.find(dstcol) != dstdata->intsptrmap.end()) dstdata->intsptrmap.erase(dstcol);
-            int usecount = srcdata->intsptrmap.at(srccol).use_count();
             dstdata->intsptrmap.insert(pair<int, shared_ptr<vector<int>>>(dstcol, srcdata->intsptrmap.at(srccol)));
-            usecount = srcdata->intsptrmap.at(srccol).use_count();
-            int dummy =1;
         }
         else {
             if (dstdata->dblsptrmap.find(dstcol) != dstdata->dblsptrmap.end()) dstdata->dblsptrmap.erase(dstcol);
@@ -877,7 +831,6 @@ vector<string> IH5File::getLogData(){
 
     H5::DataType h5dtype = h5dset.getDataType();
     h5dset.getSpace().getSimpleExtentDims( &dims, NULL);
-    size_t element_size = h5dtype.getSize();
 
     /* Construct native type */
     if((native_type=H5Tget_native_type(h5dtype.getId(), H5T_DIR_DEFAULT)) < 0 )
@@ -905,39 +858,70 @@ vector<string> IH5File::getLogData(){
     return stringlist;
 }
 
-JoinedData* IH5File::getJoinedData(vector<MetaData*>& mdvec, FillRule fill){
+vector<Data*> IH5File::getJoinedData(vector<MetaData*>& mdvec, FillRule fillType){
 
-    vector<Data*> datavect;
+    vector<IData*> datavect;
+    vector<Data*> moddatavect;
+    set<int> channelPosCounts;
+    set<int> axisPosCounts;
+    set<int> newlist;
+    vector<int> posCounters;
+
+    if (mdvec.size() == 0) return moddatavect;
+
     for (vector<MetaData*>::iterator mdit=mdvec.begin(); mdit != mdvec.end(); ++mdit){
-        Data* idat = getData((IMetaData*)*mdit);
-        if (idat != NULL) datavect.push_back((Data*)idat);
+        IData* idat = (IData*) getData((IMetaData*)*mdit);
+        if (idat != NULL) datavect.push_back(idat);
+        DeviceType deviceType = idat->getDeviceType();
+        if (deviceType == Channel) {
+            channelPosCounts.insert(idat->posCounts.begin(), idat->posCounts.end());
+        }
+        else if (deviceType == Axis) {
+            axisPosCounts.insert(idat->posCounts.begin(), idat->posCounts.end());
+        }
+
     }
-    if (datavect.size() > 0)
-        cout << "Create joined data " << endl;
-    return new IJoinedData(datavect, fill);
+    if (fillType == NoFill) {
+        for (set<int>::iterator it=axisPosCounts.begin(); it != axisPosCounts.end(); ++it){
+            if (channelPosCounts.find(*it) != channelPosCounts.end()) newlist.insert(*it);
+        }
+    }
+    if ((fillType == LastFill) || (fillType == LastNANFill))
+        newlist.insert(channelPosCounts.begin(), channelPosCounts.end());
+    if((fillType == NANFill) || (fillType == LastNANFill))
+        newlist.insert(axisPosCounts.begin(), axisPosCounts.end());
+
+    posCounters.insert(posCounters.begin(),newlist.begin(), newlist.end());
+
+    for (vector<IData*>::iterator mdit=datavect.begin(); mdit != datavect.end(); ++mdit){
+        IData* newData = *mdit;
+        if ((newData->posCounts.size() != posCounters.size()) || (newData->posCounts != posCounters)) {
+            newData = new IData(*newData, posCounters);
+            delete *mdit;
+        }
+        moddatavect.push_back(newData);
+    }
+    return moddatavect;
 }
 
-JoinedData* IH5File::getPreferredData(FillRule fill){
+vector<Data*> IH5File::getPreferredData(FillRule fill){
     string prefAxis = "";
     string prefChannel = "";
+    vector<MetaData*> mdvect;
+
     map<string, string>::iterator it = chainAttributes.find("preferredAxis");
     if (it != chainAttributes.end()) prefAxis = it->second;
     it = chainAttributes.find("preferredChannel");
     if (it != chainAttributes.end()) prefChannel = it->second;
     it = chainAttributes.find("PreferredNormalizationChannel");
     if (it != chainAttributes.end()) prefChannel = "normalized/" + prefChannel + "__" + it->second;
-    if ((prefAxis.size() == 0) || (prefChannel.size() == 0)) return NULL;
 
-    vector<MetaData*> mdvect;
-    cout << "Preferred Axis: " << prefAxis << ", Preferred Channel: " << prefChannel << endl;
     if ((prefAxis.size() > 0) && (prefChannel.size() > 0)){
         prefAxis = getSectionString(Standard) + "/" + prefAxis;
         MetaData* axismd = findMetaData(chainmeta, prefAxis);
         prefChannel = getSectionString(Standard) + "/" + prefChannel;
         MetaData* channelmd = findMetaData(chainmeta, prefChannel);
-        // cout << "Preferred Axis Path: " << prefAxis << ", Preferred Channel Path: " << prefChannel << endl;
         if ((axismd != NULL) && (channelmd != NULL)) {
-            // cout << "Got preferred metadata " << endl;
             mdvect.push_back(axismd);
             mdvect.push_back(channelmd);
         }

@@ -12,7 +12,6 @@
 #include "IData.h"
 #include "IH5File.h"
 #include "IMetaData.h"
-#include "IJoinedData.h"
 
 #ifndef H5_NO_NAMESPACE
      using namespace H5;
@@ -35,8 +34,8 @@ public:
     map<string, string> getFileMetaData(){return ih5file->getFileMetaData();};
     vector<MetaData *> getMetaData(Section section, string str){return ih5file->getMetaData(section, str);};
     vector<Data*> getData(vector<MetaData*>& mdvec){return ih5file->getData(mdvec);};
-    JoinedData* getJoinedData(vector<MetaData*>& mdvec, FillRule fill=NoFill){return ih5file->getJoinedData(mdvec, fill);};
-    JoinedData* getPreferredData(FillRule fill){return ih5file->getPreferredData(fill);};
+    vector<Data*> getJoinedData(vector<MetaData*>& mdvec, FillRule fill=NoFill){return ih5file->getJoinedData(mdvec, fill);};
+    vector<Data*> getPreferredData(FillRule fill){return ih5file->getPreferredData(fill);};
     vector<string> getLogData(){return ih5file->getLogData();};
 
 private:

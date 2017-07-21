@@ -9,7 +9,7 @@ QT       -= core gui
 TARGET = eveH5
 TEMPLATE = lib
 
-VERSION += 4.0
+VERSION += 5.0
 DEFINES += EVEH5_LIBRARY
 
 CONFIG += dll
@@ -20,7 +20,6 @@ SOURCES += \
     IFile.cpp \
     IData.cpp \
     IH5File.cpp \
-    IJoinedData.cpp \
     IMetaData.cpp \
     ih5filev2.cpp \
     ih5filev3.cpp \
@@ -33,7 +32,6 @@ HEADERS += \
     IData.h \
     IH5File.h \
     IMetaData.h \
-    IJoinedData.h \
     ih5filev2.h \
     ih5filev3.h \
     ih5filev4.h \

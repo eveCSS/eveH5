@@ -6,6 +6,26 @@
 #include <vector>
 #include <list>
 
+/*! \mainpage EVE Data Interface
+ *
+ * \section intro_sec Introduction
+ *
+ * EVE Data Interface is a C++ Interface to read data written with eveCSS
+ * It consists of an API description, which must be included into the the users
+ * C++ application and a shared library, which will be loaded at run-time.
+ *
+ * \subsection compile EVEH5 shared library
+ * The EVEH5 shared library supports HDF5 data files and needs a HDF5 library to compile.
+ * Since it uses features from C++11, it must be compiled with -std=c++11
+ * (for build command see eveH5.pro).
+ *
+ * \subsection usage Usage
+ * + Include eve.h in your application and link against the shared library
+ * + EVEH5 supports EVEH5 layout from version 1 to version 5
+ *
+*/
+
+
 namespace eve {
 
 /** fill rule specifies how to create joined data
@@ -93,7 +113,7 @@ public:
       for array data columns is > 1
      * \return rows, columns
      */
-    virtual std::pair<int, int> getDimension()=0;
+    virtual std::pair<unsigned int, unsigned int> getDimension()=0;
 
     /** get section
      * \return name
@@ -123,26 +143,31 @@ public:
     virtual ~Data(){};
 
     /** get position references
+     * obsolete, will be removed in future versions
      * \return array of position references
      */
     virtual std::vector<int> getPosReferences()=0;
 
-    /** get pointer to internal array data (for array data only).
-     * Use this to retrieve array data for a single position reference
-     * \param posRef position reference for the desired array data
-     * \param ptr address where the data pointer will be stored
-     * \return number of values in the array or -1 if not array data
-     * \sa isArrayData()
+    /** get a pointer to a vector of corresponding type (for array data only).
+     * Use this to retrieve array data for a specified row count
+     * Cast the pointer to a vector with type retrieved by getDataType().
+     * The size of the vector may be derived from getDimension()[1]
+     * This vector must be deleted after use.
+     * \param cnt number of desired data array
+     * \return ptr address of the vector pointer (NULL if no array data or error)
+     * \sa isArrayData(), getDimension(), getDataType()
      */
-    virtual int getArrayDataPointer(int posRef, void** ptr)=0;
+    virtual void* getArrayDataPointer(unsigned int cnt)=0;
 
-    /** get pointer to internal data container (not for array data).
-     * Use this to retrieve a container with all values i.e for all position references
-     * \param ptr address where the data pointer will be stored
-     * \return number of values in the array or -1 if array data
+    /** get pointer to a vector of corresponding type (not for array data).
+     * Use this to retrieve a vector with all values
+     * Cast the pointer to a vector with type retrieved by getDataType().
+     * The size of the vector may be derived from getDimension()[0]
+     * This vector must be deleted after use.
+     * \return ptr address of the vector pointer (NULL if no array data or error)
      * \sa isArrayData()
      */
-    virtual int getDataPointer(void** ptr)=0;
+    virtual void* getDataPointer()=0;
 
     /** check if data is array data.
      * \return true if array data
@@ -207,53 +232,6 @@ public:
 
 };
 
-class JoinedData
-{
-public:
-
-    /** join a list of data objects to retrieve a list of data objects with corresponding
-     * values. May be used to create table data from single data objects. All data will have the
-     * same number of values.
-     *
-     * \param datalist list with Data objects
-     * \param fill desired fill rule
-     * \return JoinedData
-     */
-    static JoinedData* getJoinedData(std::vector<Data*>& datalist, FillRule fill=NoFill);
-    virtual ~JoinedData(){};
-
-    /** retrieve metadata of a specific column
-     *
-     * \param col column number (start with 0)
-     * \return metadata
-     */
-    virtual MetaData* getMetaData(unsigned int col)=0;
-
-    /** get the data object of the specified column.
-     *
-     * Use this to retrieve a data object with values as specified in fill rule
-     * Use getColumnType() to retrieve the type of the data
-     * \param col column number (start with 0)
-     * \return pointer to data or NULL if an error occurs
-     * \sa getColumnType()
-     */
-    virtual Data* getData(unsigned int col)=0;
-
-    /** Retrieve the number of columns
-     *
-     * \return number of columns
-     */
-    virtual unsigned int getColumnCount()=0;
-
-    /** Retrieve the number of rows (size of each column array)
-     *
-     * \return number of rows
-     */
-    virtual unsigned int getValueCount()=0;
-
-};
-
-
 class DataFile {
 public:
     virtual ~DataFile(){};
@@ -305,19 +283,24 @@ public:
     virtual std::vector<Data*> getData(std::vector<MetaData*>& metadatalist)=0;
 
     /** Retrieve joined data for given metada.
+     * Transforms a list of data objects to data objects with corresponding rows.
+     * May be used to create table data from single data objects. All data will have the
+     * same number of values and my be merged into a table. Depending on the fill rule,
+     * missing values will be added or all data objects are reduced to rows
+     * existent in evey dataset.
      *
      * \param metadatalist list of metadata to retrieve data for
      * \param fill desired fill rule
      * \return list of data pointers (delete after use)
      */
-    virtual JoinedData* getJoinedData(std::vector<MetaData*>& metadatalist, FillRule fill=NoFill)=0;
+    virtual std::vector<Data*>  getJoinedData(std::vector<MetaData*>& metadatalist, FillRule fill=NoFill)=0;
 
     /** Retrieve joined data for data marked as preferred in selected chain.
      *
      * \param fill desired fill rule
      * \return list of data pointers (delete after use)
      */
-    virtual JoinedData* getPreferredData(FillRule fill=NoFill)=0;
+    virtual std::vector<Data*>  getPreferredData(FillRule fill=NoFill)=0;
 
     /** Retrieve log
      *
@@ -330,7 +313,7 @@ public:
 } // namespace end
 
 
-/** \example main.cpp
+/** \example example.cpp
  * This is an example of how to use the EveH5 classes.
  *
  * Link this to the shared library libeveH5.so

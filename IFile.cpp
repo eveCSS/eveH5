@@ -102,7 +102,6 @@ void IFile::getH5Version(Group& rootgroup){
         h5version = strtof(versionString.c_str(), NULL);
     }
     catch (Exception error){
-//        STHROW("No EVEH5 version information available; Cannot read File" );
         cout << "No EVEH5 version information available, assuming EVEH5 version 1.0" << endl;
         h5version = 1.0;
     }

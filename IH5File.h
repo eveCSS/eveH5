@@ -13,7 +13,6 @@
 #include "H5Cpp.h"
 #include "IData.h"
 #include "IMetaData.h"
-#include "IJoinedData.h"
 
 #ifndef H5_NO_NAMESPACE
      using namespace H5;
@@ -39,12 +38,12 @@ public:
     virtual void chainInventory();
     virtual vector<MetaData *> getMetaData(Section section, string str);
     virtual vector<Data*> getData(vector<MetaData*>& mdvec);
-    virtual Data* getData(MetaData* );
-    virtual JoinedData* getJoinedData(vector<MetaData*>& mdvec, FillRule fill=NoFill);
-    virtual JoinedData* getPreferredData(FillRule fill=NoFill);
+    virtual std::vector<Data*> getJoinedData(vector<MetaData*>& mdvec, FillRule fill=NoFill);
+    virtual std::vector<Data*> getPreferredData(FillRule fill=NoFill);
     virtual vector<string> getLogData();
 
 protected:
+    virtual Data* getData(MetaData* );
     string filename;
     float h5version;
     int selectedChain;
@@ -52,7 +51,6 @@ protected:
     void readDataArray(IData* data);
     void readDataPCOneCol(IData* data);
     void readDataPCTwoCol(IData* data);
-    // void copyAndFill(IData *srcdata, int srccol, void* dstvct, eve::DataType dsttype, vector<int> *dstpCts);
     void copyAndFill(IData *srcdata,eve::DataType srctype, int srccol, IData *dstdata, eve::DataType dsttype, int dstcol);
     virtual void addExtensionData(IData* data);
     void openGroup(Group& h5group, string path);
@@ -75,10 +73,7 @@ protected:
     vector<IMetaData*> chainmeta;
     vector<IMetaData*> extensionmeta;
     vector<IMetaData*> monitormeta;
-//    map<string, string> chain2Modified;
     vector<int> chainList;
-//    list<string> dsList;
-//    list<string> deviceDsList;
     map<string, string> rootAttributes;
     map<string, string> chainAttributes;
 };

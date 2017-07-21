@@ -47,16 +47,17 @@ public:
     string getId(){return IMetaData::getId();};
     string getChannelId(){return IMetaData::getChannelId();};
     string getNormalizeId(){return IMetaData::getNormalizeId();};
-    pair<int, int> getDimension(){return IMetaData::getDimension();};
+    pair<unsigned int, unsigned int> getDimension(){return IMetaData::getDimension();};
     Section getSection(){return IMetaData::getSection();};
     map<std::string, std::string>& getAttributes(){return IMetaData::getAttributes();};
     DeviceType getDeviceType(){return IMetaData::getDeviceType();};
     eve::DataType getDataType(){return IMetaData::getDataType();};
 
     vector<int> getPosReferences(){return posCounts;};
-    int getArrayDataPointer(int posRef, void**);
-    int getDataPointer(void** ptr){return getDataPointer(ptr, 0);};
-    int getDataPointer(void** ptr, int col);
+    void* getArrayDataPointer(unsigned int row);
+    void *getDataPointer();
+    // int getDataPointer(void** ptr){return getDataPointer(ptr, 0);};
+    //int getDataPointer(void** ptr, int col);
     bool isArrayData(){if (dstype == EVEDSTArray) return true; else return false;};
     bool hasAverageData(){if ((intsptrmap.find(AVCOUNT) != intsptrmap.end()) && (intsptrmap.at(AVCOUNT)->size() > 0)) return true; else return false; };
     bool hasStdDeviation(){if ((dblsptrmap.find(STDDEV) != dblsptrmap.end()) && (dblsptrmap.at(STDDEV)->size() > 0)) return true; else return false; };
@@ -73,14 +74,13 @@ public:
 
 private:
     vector<int> posCounts;
-    map<int, void*> posPtrHash;
+    map<int, shared_ptr<char>> posPtrHash;
     map<int, shared_ptr<vector<int>>> intsptrmap;
     map<int, shared_ptr<vector<double>>> dblsptrmap;
     map<int, shared_ptr<vector<string>>> strsptrmap;
 
     friend class IH5File;
     friend class IH5FileV5;
-    friend class IJoinedData;
 };
 
 } // namespace end
