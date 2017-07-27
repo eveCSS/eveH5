@@ -56,7 +56,8 @@ IH5File::IH5File(H5::H5File oh5file, string file)
     sections = {"", "meta"};
     calculations = {""};
     normalizations = {"normalized"};
-
+    chainTSfullname = "meta/PosCountTimer";
+    timestampMeta = NULL;
 }
 
 void IH5File::init()
@@ -79,7 +80,24 @@ void IH5File::init()
 
 IH5File::~IH5File()
 {
-    close();
+//    close();
+    isOpen = false;
+    chainList.clear();
+    rootAttributes.clear();
+    chainAttributes.clear();
+    for (IMetaData* mdata: chainmeta) delete mdata;
+    chainmeta.clear();
+    for (IMetaData* mdata: extensionmeta) delete mdata;
+    extensionmeta.clear();
+    for (IMetaData* mdata: monitormeta) delete mdata;
+    monitormeta.clear();
+    if (timestampMeta != NULL) delete timestampMeta;
+    try {
+        h5file.close();
+    }
+    catch (Exception error){
+        STHROW("Error closing file; H5 Error: " << error.getDetailMsg() );
+    }
 }
 
 bool IH5File::isChainSection(string name){
@@ -100,19 +118,19 @@ bool IH5File::isNormalization(string name){
     return false;
 }
 
-void IH5File::close()
-{
-    isOpen = false;
-    chainList.clear();
-    rootAttributes.clear();
-    chainAttributes.clear();
-    try {
-        h5file.close();
-    }
-    catch (Exception error){
-        STHROW("Error closing file; H5 Error: " << error.getDetailMsg() );
-    }
-}
+//void IH5File::close()
+//{
+//    isOpen = false;
+//    chainList.clear();
+//    rootAttributes.clear();
+//    chainAttributes.clear();
+//    try {
+//        h5file.close();
+//    }
+//    catch (Exception error){
+//        STHROW("Error closing file; H5 Error: " << error.getDetailMsg() );
+//    }
+//}
 
 string IH5File::getSectionString(Section sect){
     string chainname = "/c" + to_string(selectedChain);
@@ -156,7 +174,14 @@ void IH5File::chainInventory(){
     openGroup(chain, path);
     chainAttributes = getH5Attributes(chain);
 
+    for (IMetaData* mdata : chainmeta) delete mdata;
     chainmeta.empty();
+    for (IMetaData* mdata : extensionmeta) delete mdata;
+    extensionmeta.empty();
+
+    chainTSfullname = path + "/" + chainTSfullname;
+    if (timestampMeta != NULL) delete timestampMeta;
+    timestampMeta = NULL;
 
     vector<string> secgroups = getGroups(chain);
     // we may have no sections at all
@@ -180,8 +205,6 @@ void IH5File::chainInventory(){
             // cout << "chainInventory group: " << grpath << endl;
             string calcpath = secpath + "/" + grpath;
             Group calcgr;
-            // skip if group is array group and already done
-            if (findMetaData(chainmeta, calcpath) != NULL) continue;
 
             if (isNormalization(grpath)){
 //                cout << "chainInventory normalized group: " << calcpath << " / " << grpath << endl;
@@ -198,8 +221,11 @@ void IH5File::chainInventory(){
                 closeGroup(calcgr);
             }
             else {
+                // ignore meta for EVEH5 Versions with empty sections
+                if (!((sit->size() == 0) && (grpath == "meta"))){
                     if (!doneLog) cout << "Caution! ignoring non-raw data" << endl;
                     doneLog = true;
+                }
             }
         }
         closeGroup(secgrp);
@@ -214,7 +240,10 @@ vector<MetaData *> IH5File::getMetaData(Section section, string filter){
         return result;
     }
 
-    if (section == Monitor)
+    if (section == Timestamp){
+        if (timestampMeta != NULL) result.push_back(new IMetaData(*timestampMeta));
+    }
+    else if (section == Monitor)
         result = getMetaData(&monitormeta, path, filter);
     else
         result = getMetaData(&chainmeta, path, filter);
@@ -232,7 +261,7 @@ vector<MetaData *> IH5File::getMetaData(vector<IMetaData *> *devlist, string pat
         IMetaData* mdat = *it;
         if ((mdat->getId().find(filter)!=string::npos) && (mdat->getPath().find(path)==0)){
             // cout << "filter: >" << filter << "< srcpath: " << mdat->getPath() << " searchpath: " << path << endl;
-            result.push_back(mdat);
+            result.push_back(new IMetaData(*mdat));
         }
     }
     return result;
@@ -329,7 +358,12 @@ void IH5File::parseDatasets(Group& group, string prefix, vector<IMetaData*>& ime
 
             IMetaData* dinfo = new IMetaData(prefix + "/", calctype, objname, getH5Attributes(ds));
             dinfo->setDataType(ds);
-            imeta.push_back(dinfo);
+            if (dinfo->getFQH5Name() == chainTSfullname){
+                if (timestampMeta != NULL) delete timestampMeta;
+                timestampMeta = dinfo;
+            }
+            else
+                imeta.push_back(dinfo);
             ds.close();
 
             // cout << "parseDatasets DS: " << dinfo->getId() << " full path: " << dinfo->getFQH5Name() << endl;
@@ -413,9 +447,6 @@ void IH5File::readDataArray(IData* data){
     hsize_t dims_out[2];
     size_t element_size;
 
-    if ((data->datatype != DTint32) && (data->datatype != DTfloat64))
-        STHROW("unsupported datatype, currently only int32 or float64 are supported for arrays");
-
     Group dsgroup;
     openGroup(dsgroup, data->getFQH5Name());
 
@@ -452,14 +483,7 @@ void IH5File::readDataArray(IData* data){
             STHROW("Error: Unexpected dimension in Dataset " << objname);
         }
 
-        if ((data->datatype == DTint32) && (element_size != sizeof(int))){
-            STHROW("Error: Unexpected integer size in Dataset " << objname);
-        }
-        else if ((data->datatype == DTfloat64) && (element_size != sizeof(double))){
-            STHROW("Error: Unexpected float size in Dataset " << objname);
-        }
-
-        std::shared_ptr<char> memBuffer(new char[element_size * dims_out[0]], std::default_delete<char[]>() );
+        shared_ptr<char> memBuffer(new char[element_size * dims_out[0]], default_delete<char[]>() );
         // std::shared_ptr<char> memBuffer(new char[element_size * dims_out[0]], array_deleter<char>() );
 
         if (memBuffer.get() == NULL){
@@ -702,6 +726,7 @@ void IH5File::addExtensionData(IData* data){
         readDataPCTwoCol(avdata);
         copyAndFill(avdata, DTint32, INTVECT1, data, DTint32, AVCOUNT);
         copyAndFill(avdata, DTint32, INTVECT2, data, DTint32, AVATT);
+        delete avdata;
     }
     fullh5name = data->getPath() + "averagemeta/" + datasetname + "__Limit";
     extensionmd = findMetaData(extensionmeta, fullh5name);
@@ -710,6 +735,7 @@ void IH5File::addExtensionData(IData* data){
         readDataPCTwoCol(avdata);
         copyAndFill(avdata, DTfloat64, DBLVECT1, data, DTfloat64, AVLIMIT);
         copyAndFill(avdata, DTfloat64, DBLVECT2, data, DTfloat64, AVMAXDEV);
+        delete avdata;
     }
     fullh5name = data->getPath() + "averagemeta/" + datasetname + "__MaxAttempts";
     extensionmd = findMetaData(extensionmeta, fullh5name);
@@ -717,6 +743,7 @@ void IH5File::addExtensionData(IData* data){
         IData* avdata = new IData((IMetaData&)*extensionmd);
         readDataPCOneCol(avdata);
         copyAndFill(avdata, DTint32, INTVECT1, data, DTint32, AVATTPR);
+        delete avdata;
     }
     fullh5name = data->getPath() + "standarddev/" + datasetname + "__Count";
     extensionmd = findMetaData(extensionmeta, fullh5name);
@@ -725,6 +752,7 @@ void IH5File::addExtensionData(IData* data){
         readDataPCTwoCol(avdata);
         copyAndFill(avdata, DTfloat64, DBLVECT1, data, DTint32, STDDEVCOUNT);
         copyAndFill(avdata, DTfloat64, DBLVECT2, data, DTfloat64, STDDEV);
+        delete avdata;
     }
 }
 
@@ -769,7 +797,7 @@ void IH5File::copyAndFill(IData *srcdata, eve::DataType srctype, int srccol, IDa
 
         for (unsigned int i=0; i < dstPosCounts.size(); ++i){
             int dstposcnt = dstPosCounts.at(i);
-            while ((srcdata->posCounts[srcidx] < dstposcnt) && (srcidx < srcsize)) ++ srcidx;
+            while ((srcdata->posCounts[srcidx] < dstposcnt) && (srcidx < srcsize - 1)) ++ srcidx;
             if ((srcposcountsize > 0) && (dstposcnt == srcdata->posCounts[srcidx])){
                 if (srcdata->getDataType() == DTint32){
                     if (dsttype == DTint32)

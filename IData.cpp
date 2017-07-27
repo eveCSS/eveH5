@@ -51,7 +51,7 @@ IData::IData(IData& data, vector<int> posrefs) : IMetaData(data)
         unsigned int idx=0;
         unsigned int pcidx=0;
         for (int newpc : posrefs){
-            while((data.posCounts[idx] < newpc) && (idx < data.posCounts.size())) ++idx;
+            while((data.posCounts[idx] < newpc) && (idx < (data.posCounts.size()-1))) ++idx;
             if (data.posCounts[idx] == newpc) {
                 for (int j : intarrs){
                     intsptrmap.at(j)->at(pcidx) = data.intsptrmap.at(j)->at(idx);
@@ -95,12 +95,6 @@ IData::~IData()
 }
 
 
-/**
- * @brief          retrieve a pointer to stored array data
- * @param posRef   row counter
- * @param ptr      pointer to a location where the data container will be stored
- * @return         count of container members or -1 if an error occured
- */
 void* IData::getArrayDataPointer(unsigned int row)
 {
     void *ptr=NULL;
@@ -133,12 +127,6 @@ void* IData::getArrayDataPointer(unsigned int row)
     return ptr;
 }
 
-/**
- * @brief       retrieve a pointer to stored data
- * @param ptr   pointer to a location where the data container will be stored
- * @param col   column, if multicolumn data
- * @return      count of container members or -1 if an error occured
- */
 void* IData::getDataPointer()
 {
     void *ptr = NULL;
@@ -157,39 +145,39 @@ void* IData::getDataPointer()
 }
 
 vector<int> IData::getAverageAttemptsPreset(){
-    if (intsptrmap.find(AVATTPR) != intsptrmap.end()) return *intsptrmap.at(AVATTPR);
+    if (intsptrmap.find(AVATTPR) != intsptrmap.end()) return vector<int>(*intsptrmap.at(AVATTPR));
     return vector<int>();
 }
 vector<int> IData::getAverageAttempts(){
-    if (intsptrmap.find(AVATT) != intsptrmap.end()) return *intsptrmap.at(AVATT);
+    if (intsptrmap.find(AVATT) != intsptrmap.end()) return vector<int>(*intsptrmap.at(AVATT));
     return vector<int>();
 }
 vector<int>  IData::getAverageCountPreset(){
-    if (intsptrmap.find(AVCOUNTPR) != intsptrmap.end()) return *intsptrmap.at(AVCOUNTPR);
+    if (intsptrmap.find(AVCOUNTPR) != intsptrmap.end()) return vector<int>(*intsptrmap.at(AVCOUNTPR));
     return vector<int>();
 }
 vector<int>  IData::getAverageCount(){
-    if (intsptrmap.find(AVCOUNT) != intsptrmap.end()) return *intsptrmap.at(AVCOUNT) ;
+    if (intsptrmap.find(AVCOUNT) != intsptrmap.end()) return vector<int>(*intsptrmap.at(AVCOUNT)) ;
     return vector<int>();
 }
 vector<double>  IData::getAverageLimitPreset(){
-    if (dblsptrmap.find(AVLIMIT) != dblsptrmap.end()) return *dblsptrmap.at(AVLIMIT);
+    if (dblsptrmap.find(AVLIMIT) != dblsptrmap.end()) return vector<double>(*dblsptrmap.at(AVLIMIT));
     return vector<double>();
 }
 vector<double>  IData::getAverageMaxDeviationPreset(){
-    if (dblsptrmap.find(AVMAXDEV) != dblsptrmap.end()) return *dblsptrmap.at(AVMAXDEV);
+    if (dblsptrmap.find(AVMAXDEV) != dblsptrmap.end()) return vector<double>(*dblsptrmap.at(AVMAXDEV));
     return vector<double>();
 }
 vector<int>  IData::getStddevCount(){
-    if (intsptrmap.find(STDDEVCOUNT) != intsptrmap.end()) return *intsptrmap.at(STDDEVCOUNT);
+    if (intsptrmap.find(STDDEVCOUNT) != intsptrmap.end()) return vector<int>(*intsptrmap.at(STDDEVCOUNT));
     return vector<int>();
 }
 vector<double>  IData::getStddeviation(){
-    if (dblsptrmap.find(STDDEV) != dblsptrmap.end()) return *dblsptrmap.at(STDDEV);
+    if (dblsptrmap.find(STDDEV) != dblsptrmap.end()) return vector<double>(*dblsptrmap.at(STDDEV));
     return vector<double>();
 }
 vector<double>  IData::getTriggerIntv(){
-    if (dblsptrmap.find(TRIGGERINTV) != dblsptrmap.end()) return *dblsptrmap.at(TRIGGERINTV);
+    if (dblsptrmap.find(TRIGGERINTV) != dblsptrmap.end()) return vector<double>(*dblsptrmap.at(TRIGGERINTV));
     return vector<double>();
 }
 

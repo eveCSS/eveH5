@@ -71,6 +71,7 @@ IFile::IFile(string filename)
 
 IFile::~IFile()
 {
+    if (ih5file != NULL) delete ih5file;
 }
 
 void IFile::openGroupH5(H5File h5file, Group& h5group, string path){
@@ -111,14 +112,14 @@ void IFile::getH5Version(Group& rootgroup){
     return;
 }
 
-void IFile::close(H5File h5file)
-{
-    try {
-        h5file.close();
-    }
-    catch (Exception error){
-        STHROW("Error closing file; H5 Error: " << error.getDetailMsg() );
-    }
-}
+//void IFile::close(H5File h5file)
+//{
+//    try {
+//        h5file.close();
+//    }
+//    catch (Exception error){
+//        STHROW("Error closing file; H5 Error: " << error.getDetailMsg() );
+//    }
+//}
 
 } // namespace end

@@ -27,7 +27,7 @@ public:
     IH5File(H5::H5File, string);
     virtual ~IH5File();
     virtual void init();
-    void close();
+//    void close();
 
     virtual string getSectionString(Section);
     virtual vector<int> getChains(){return chainList;};
@@ -67,6 +67,8 @@ protected:
     map<string, string> getH5Attributes(H5Location&);
     bool haveGroupWithName(Group& group, string name);
     H5File h5file;
+    IMetaData* timestampMeta;
+    string chainTSfullname;
     set<string> sections;
     set<string> calculations;
     set<string> normalizations;

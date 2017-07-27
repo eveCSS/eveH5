@@ -82,11 +82,17 @@ void IMetaData::setDataType(DataSet& ds){
         switch (ds.getTypeClass()){
         case H5T_INTEGER:
             dstype = EVEDSTArray;
-            datatype = DTint32;
+            if (ds.getIntType() == PredType::NATIVE_INT8) datatype = DTint8;
+            else if (ds.getIntType() == PredType::NATIVE_UINT8) datatype = DTuint8;
+            else if (ds.getIntType() == PredType::NATIVE_INT16) datatype = DTint16;
+            else if (ds.getIntType() == PredType::NATIVE_UINT16) datatype = DTuint16;
+            else if (ds.getIntType() == PredType::NATIVE_UINT32) datatype = DTuint32;
+            else if (ds.getIntType() == PredType::NATIVE_INT32) datatype = DTint32;
             break;
         case H5T_FLOAT:
             dstype = EVEDSTArray;
-            datatype = DTfloat64;
+            if (ds.getFloatType()  == PredType::NATIVE_FLOAT) datatype = DTfloat32;
+            else if (ds.getFloatType() == PredType::NATIVE_DOUBLE) datatype = DTfloat64;
             break;
         case H5T_STRING:
             dstype = EVEDSTArray;

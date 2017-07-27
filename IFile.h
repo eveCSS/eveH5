@@ -25,7 +25,6 @@ class IFile : public DataFile {
 public:
     IFile(string);
     virtual ~IFile();
-    void close();
 
     vector<int> getChains(){return ih5file->getChains();};
     int getChain(){return ih5file->getChain();};
