@@ -137,7 +137,7 @@ void* IData::getDataPointer()
         else if ((datatype == DTfloat64) && (dblsptrmap.find(0) != dblsptrmap.end())) {
             ptr = new vector<double>(*dblsptrmap.at(0));
         }
-        else if ((datatype == DTstring) && (strsptrmap.find(0) == strsptrmap.end())){
+        else if ((datatype == DTstring) && (strsptrmap.find(0) != strsptrmap.end())){
             ptr = new vector<string>(*strsptrmap.at(0));
         }
     }
