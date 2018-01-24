@@ -20,10 +20,10 @@ class IMetaData : public MetaData
 {
 public:
     IMetaData();
-    IMetaData(string , string , string , map<string, string> );
+    IMetaData(string , string , string , Section section, map<string, string> );
     virtual ~IMetaData(){};
     virtual string getName(){return name;};
-    virtual string getUnit(){return unit;};
+    virtual string getUnit();
     virtual string getId(){return xmlId;};
     virtual string getChannelId(){return channelId;};
     virtual string getNormalizeId(){return normalizeId;};
@@ -43,7 +43,6 @@ protected:
     string calculation;
     string h5name;
     map<string, string> attributes;
-    string unit;
     string name;
     string xmlId;
     string channelId;

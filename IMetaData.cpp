@@ -26,8 +26,8 @@ IMetaData::IMetaData() : datatype(DTunknown), devtype(Unknown),
     isMonitor = false;
 }
 
-IMetaData::IMetaData(string basep, string calc, string h5n, map<string, string> attrib)
-    : path(basep), calculation(calc), h5name(h5n), attributes(attrib)
+IMetaData::IMetaData(string basep, string calc, string h5n, Section section, map<string, string> attrib)
+    : selSection(section), path(basep), calculation(calc), h5name(h5n), attributes(attrib)
 {
 
     dim0 = 0;
@@ -68,6 +68,14 @@ string IMetaData::getFQH5Name(){
     string calcstring = "";
     if (calculation.length() > 0) calcstring = calculation + "/";
     return path + calcstring + h5name;
+}
+
+string IMetaData::getUnit(){
+
+    if (attributes.count("Unit") > 0)
+        return attributes.find("Unit")->second;
+     else
+        return string("");
 }
 
 void IMetaData::setDataType(DataSet& ds){

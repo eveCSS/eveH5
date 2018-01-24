@@ -72,7 +72,7 @@ void IH5File::init()
     if (haveGroupWithName(root, "device")){
         Group devices;
         openGroup(devices, "/device");
-        parseDatasets(devices, "/device", monitormeta, "");
+        parseDatasets(devices, "/device", monitormeta, "", Monitor);
         closeGroup(devices);
     }
     closeGroup(root);
@@ -190,6 +190,7 @@ void IH5File::chainInventory(){
     for (vector<string>::iterator sit=secgroups.begin(); sit != secgroups.end(); ++sit){
 //        cout << "chainInventory test section: " << *sit << endl;
         if (!isChainSection(*sit)) continue;
+        Section current_section = Standard;
 
         string secpath = path;
         if (sit->size() != 0) secpath += "/" + *sit;
@@ -197,8 +198,9 @@ void IH5File::chainInventory(){
         Group secgrp;
         openGroup(secgrp, secpath);
 //        cout << "chainInventory section: " << secpath << endl;
-        parseDatasets(secgrp, secpath, chainmeta, "");
-        parseGroupDatasets(secgrp, secpath, chainmeta, "");
+        if (getSectionString(Snapshot) == secpath) current_section = Snapshot;
+        parseDatasets(secgrp, secpath, chainmeta, "", current_section);
+        parseGroupDatasets(secgrp, secpath, chainmeta, "", current_section);
         vector<string> dsgroups = getGroups(secgrp);
         for (vector<string>::iterator it=dsgroups.begin(); it != dsgroups.end(); ++it){
             string grpath = *it;
@@ -209,15 +211,15 @@ void IH5File::chainInventory(){
             if (isNormalization(grpath)){
 //                cout << "chainInventory normalized group: " << calcpath << " / " << grpath << endl;
                 openGroup(calcgr, calcpath);
-                parseDatasets(calcgr, secpath, chainmeta, grpath);
-                parseGroupDatasets(calcgr, calcpath, chainmeta, grpath);
+                parseDatasets(calcgr, secpath, chainmeta, grpath, current_section);
+                parseGroupDatasets(calcgr, calcpath, chainmeta, grpath, current_section);
                 closeGroup(calcgr);
             }
             else if (isCalc(grpath)){
 //                cout << "chainInventory calc group: " << calcpath << endl;
                 openGroup(calcgr, calcpath);
-                parseDatasets(calcgr, secpath, extensionmeta, grpath);
-                parseGroupDatasets(calcgr, calcpath, extensionmeta, grpath);
+                parseDatasets(calcgr, secpath, extensionmeta, grpath, current_section);
+                parseGroupDatasets(calcgr, calcpath, extensionmeta, grpath, current_section);
                 closeGroup(calcgr);
             }
             else {
@@ -310,7 +312,7 @@ vector<string> IH5File::getGroups(Group& group){
 }
 
 // collect all groups with array data i.e. with attribute "XML-ID"
-void IH5File::parseGroupDatasets(Group& group, string prefix, vector<IMetaData*>& imeta, string calctype)
+void IH5File::parseGroupDatasets(Group& group, string prefix, vector<IMetaData*>& imeta, string calctype, Section section)
 {
     
     vector<string> dsgroups = getGroups(group);
@@ -325,7 +327,7 @@ void IH5File::parseGroupDatasets(Group& group, string prefix, vector<IMetaData*>
         map<string, string> attribs = getH5Attributes(dsgroup);
         if (attribs.count("XML-ID") == 0) continue;
 
-        IMetaData* dinfo = new IMetaData(prefix + "/", calctype, *it, attribs);
+        IMetaData* dinfo = new IMetaData(prefix + "/", calctype, *it, section, attribs);
         for (hsize_t index = 0; index < dsgroup.getNumObjs(); ++index){
             if (dsgroup.getObjTypeByIdx(index) != H5G_DATASET) continue;
 //            string subname = dsgroup.getObjnameByIdx(index);
@@ -349,16 +351,19 @@ void IH5File::parseGroupDatasets(Group& group, string prefix, vector<IMetaData*>
 
 
 
-void IH5File::parseDatasets(Group& group, string prefix, vector<IMetaData*>& imeta, string calctype){
+void IH5File::parseDatasets(Group& group, string prefix, vector<IMetaData*>& imeta, string calctype, Section section){
 
     for (hsize_t index = 0; index < group.getNumObjs(); ++index){
         string objname = group.getObjnameByIdx(index);
         if (group.getObjTypeByIdx(index) == H5G_DATASET){
             DataSet ds = group.openDataSet(objname);
+            Section useSection=section;
 
-            IMetaData* dinfo = new IMetaData(prefix + "/", calctype, objname, getH5Attributes(ds));
+            if (prefix+"/"+objname == chainTSfullname) useSection=Timestamp;
+
+            IMetaData* dinfo = new IMetaData(prefix + "/", calctype, objname, useSection, getH5Attributes(ds));
             dinfo->setDataType(ds);
-            if (dinfo->getFQH5Name() == chainTSfullname){
+            if (useSection==Timestamp){
                 if (timestampMeta != NULL) delete timestampMeta;
                 timestampMeta = dinfo;
             }

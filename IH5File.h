@@ -62,8 +62,8 @@ protected:
     virtual MetaData* findMetaData(vector<IMetaData *> &mdlist, string);
     virtual vector<string> getGroups(Group& group);
     virtual vector<int> getNumberGroups(Group& group);
-    virtual void parseDatasets(Group& group, string prefix, vector<IMetaData*>& imeta, string calctype);
-    virtual void parseGroupDatasets(Group& group, string prefix, vector<IMetaData*>& imeta, string calctype);
+    virtual void parseDatasets(Group& group, string prefix, vector<IMetaData*>& imeta, string calctype, Section section);
+    virtual void parseGroupDatasets(Group& group, string prefix, vector<IMetaData*>& imeta, string calctype, Section section);
     map<string, string> getH5Attributes(H5Location&);
     bool haveGroupWithName(Group& group, string name);
     H5File h5file;
