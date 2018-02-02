@@ -23,13 +23,15 @@ IData::IData(IMetaData& dInfo) : IMetaData(dInfo)
  * @brief          reduce or extent the data to the new list of posrefs
  * posrefs         list of new posrefs
  */
-IData::IData(IData& data, vector<int> posrefs) : IMetaData(data)
+IData::IData(IData& data, vector<int> posrefs, FillRule fillType) : IMetaData(data)
 {
     if (!isArrayData()){
         set<int> intarrs;
         set<int> dblarrs;
         set<int> strarrs;
         int pcSize = posrefs.size();
+        int lastint = INT_MIN;
+        double lastdbl = NAN;
 
         // init
         for(auto const &vpair : data.intsptrmap) {
@@ -55,9 +57,11 @@ IData::IData(IData& data, vector<int> posrefs) : IMetaData(data)
             if (data.posCounts[idx] == newpc) {
                 for (int j : intarrs){
                     intsptrmap.at(j)->at(pcidx) = data.intsptrmap.at(j)->at(idx);
+                    if (j == 0) lastint = data.intsptrmap.at(j)->at(idx);
                 }
                 for (int j : dblarrs){
                     dblsptrmap.at(j)->at(pcidx) = data.dblsptrmap.at(j)->at(idx);
+                    if (j == 0) lastdbl = data.dblsptrmap.at(j)->at(idx);
                 }
                 for (int j : strarrs){
                     strsptrmap.at(j)->at(pcidx) = data.strsptrmap.at(j)->at(idx);
@@ -65,11 +69,15 @@ IData::IData(IData& data, vector<int> posrefs) : IMetaData(data)
                 ++idx;
             }
             else if (data.posCounts[idx] != newpc) {
+                int intval = INT_MIN;
+                double dblval = NAN;
                 for (int j : intarrs){
-                    intsptrmap.at(j)->at(pcidx) = INT_MIN;
+                    if((j == 0) && ((fillType == LastFill) || (fillType == LastNANFill))) intval = lastint;
+                    intsptrmap.at(j)->at(pcidx) = intval;
                 }
                 for (int j : dblarrs){
-                    dblsptrmap.at(j)->at(pcidx) = NAN;
+                    if((j == 0) && ((fillType == LastFill) || (fillType == LastNANFill))) dblval = lastdbl;
+                    dblsptrmap.at(j)->at(pcidx) = dblval;
                 }
                 for (int j : strarrs){
                     strsptrmap.at(j)->at(pcidx) = "";

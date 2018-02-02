@@ -929,7 +929,7 @@ vector<Data*> IH5File::getJoinedData(vector<MetaData*>& mdvec, FillRule fillType
     for (vector<IData*>::iterator mdit=datavect.begin(); mdit != datavect.end(); ++mdit){
         IData* newData = *mdit;
         if ((newData->posCounts.size() != posCounters.size()) || (newData->posCounts != posCounters)) {
-            newData = new IData(*newData, posCounters);
+            newData = new IData(*newData, posCounters, fillType);
             delete *mdit;
         }
         moddatavect.push_back(newData);
