@@ -23,7 +23,6 @@ IMetaData::IMetaData() : datatype(DTunknown), devtype(Unknown),
     datatype = DTunknown;
     devtype = Unknown;
     dstype = EVEDSTUnknown;
-    isMonitor = false;
 }
 
 IMetaData::IMetaData(string basep, string calc, string h5n, Section section, map<string, string> attrib)
@@ -37,7 +36,6 @@ IMetaData::IMetaData(string basep, string calc, string h5n, Section section, map
     datatype = DTunknown;
     devtype = Unknown;
     dstype = EVEDSTUnknown;
-    isMonitor = false;
 
     if (attributes.count("axis") > 0)
         xmlId = attributes.find("axis")->second;
@@ -115,7 +113,8 @@ void IMetaData::setDataType(DataSet& ds){
             for(int idx = 0; idx < count; ++idx){
                 H5::DataType memberDtyp = compdt.getMemberDataType(idx);
                 int H5class = memberDtyp.getClass();
-                if ((idx == 0) && (compdt.getMemberName(idx).compare("PosCounter") == 0)){
+                if ((idx == 0) && ((compdt.getMemberName(idx).compare("PosCounter") == 0) ||
+                                   (compdt.getMemberName(idx).compare("mSecsSinceStart") == 0))){
                     if (count == 2) {
                         dstype = EVEDSTPCOneColumn;
                     }
@@ -149,7 +148,6 @@ void IMetaData::setDataType(DataSet& ds){
             STHROW("H5 data type not implemented ");
             break;
         }
-        if (isMonitor) dstype = EVEDSTPCOneColumn;
     }
     catch (Exception error){
         STHROW("Error while trying to check data type; H5 Error: " << error.getDetailMsg() );

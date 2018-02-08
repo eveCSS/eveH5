@@ -53,7 +53,6 @@ protected:
     hsize_t dim0; // Anzahl der PosCounts
     hsize_t dim1; // > 1 bei arrayData und EVEDSTPCTwoColumn
     hsize_t h5dimensions[2];
-    bool isMonitor;
 
     friend class IH5File;
     friend class IH5FileV5;
