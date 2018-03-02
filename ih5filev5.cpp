@@ -2,7 +2,7 @@
 
 namespace eve {
 
-IH5FileV5::IH5FileV5(H5::H5File oh5file, string filename) : IH5FileV4(oh5file, filename)
+IH5FileV5::IH5FileV5(H5::H5File oh5file, string filename, float version) : IH5FileV4(oh5file, filename, version)
 {
     sections = {"main", "snapshot", "meta"};
 }

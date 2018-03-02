@@ -9,7 +9,7 @@ namespace eve {
 class IH5FileV2 : public IH5File
 {
 public:
-    IH5FileV2(H5::H5File, string);
+    IH5FileV2(H5::H5File, string, float version);
     virtual string getSectionString(Section);
 
 

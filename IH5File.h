@@ -24,7 +24,7 @@ namespace eve {
 
 class IH5File {
 public:
-    IH5File(H5::H5File, string);
+    IH5File(H5::H5File, string, float);
     virtual ~IH5File();
     virtual void init();
 //    void close();
@@ -64,7 +64,7 @@ protected:
     virtual vector<int> getNumberGroups(Group& group);
     virtual void parseDatasets(Group& group, string prefix, vector<IMetaData*>& imeta, string calctype, Section section);
     virtual void parseGroupDatasets(Group& group, string prefix, vector<IMetaData*>& imeta, string calctype, Section section);
-    map<string, string> getH5Attributes(H5Location&);
+    map<string, string> getH5Attributes(H5Object &);
     bool haveGroupWithName(Group& group, string name);
     H5File h5file;
     IMetaData* timestampMeta;

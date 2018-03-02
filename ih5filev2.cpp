@@ -6,9 +6,10 @@ using namespace std;
 
 namespace eve {
 
-IH5FileV2::IH5FileV2(H5::H5File oh5file, string filename) : IH5File(oh5file, filename)
+IH5FileV2::IH5FileV2(H5::H5File oh5file, string filename, float version) : IH5File(oh5file, filename, version)
 {
     sections = {"default", "alternate", "meta"};
+    calculations = {"averagemeta"};
 
 }
 

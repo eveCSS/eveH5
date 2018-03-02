@@ -40,19 +40,17 @@ struct enumstruct {
 #define STR_STRUCT_SIZE 45
 #define ENUM_STRUCT_SIZE 21
 
-#define EVEH5VERSIONMAXIMUM 4.99
-#define EVEH5VERSIONMINIMUM 3.0
-
 namespace eve {
 
 // expects an already opened h5 Filehandle
-IH5File::IH5File(H5::H5File oh5file, string file)
+IH5File::IH5File(H5::H5File oh5file, string file, float version)
 {
     selectedChain = 0;
     filename = file;
     isOpen = true;
     chainList.clear();
     h5file = oh5file;
+    h5version = version;
     sections = {"", "meta"};
     calculations = {""};
     normalizations = {"normalized"};
@@ -223,8 +221,8 @@ void IH5File::chainInventory(){
                 closeGroup(calcgr);
             }
             else {
-                // ignore meta for EVEH5 Versions with empty sections
-                if (!((sit->size() == 0) && (grpath == "meta"))){
+                // ignore meta for EVEH5 version 1.0 with empty sections
+                if ((h5version == 1.0) && !((sit->size() == 0) && (grpath == "meta"))){
                     if (!doneLog) cout << "Caution! ignoring non-raw data" << endl;
                     doneLog = true;
                 }
@@ -403,7 +401,7 @@ bool IH5File::haveGroupWithName(Group& group, string name){
     return false;
 }
 
-map<string, string> IH5File::getH5Attributes(H5Location& object){
+map<string, string> IH5File::getH5Attributes(H5Object& object){
 
     map<string, string> attribMap;
     unsigned int numAttrib = object.getNumAttrs();

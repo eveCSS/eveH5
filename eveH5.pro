@@ -42,10 +42,10 @@ HEADERS += \
 #}
 
 linux-g++-64 {
-    LIBS +=  -L/home/eden/src/hdf5/hdf5-1.8.17/hdf5/lib64
+    LIBS +=  -L/home/eden/src/hdf5/hdf5-1.10.1/hdf5/lib64
 }
 
-unix:INCLUDEPATH += /home/eden/src/hdf5/hdf5-1.8.17/hdf5/include
+unix:INCLUDEPATH += /home/eden/src/hdf5/hdf5-1.10.1/hdf5/include
 
 LIBS +=  -l:libhdf5_cpp.a -l:libhdf5.a -lz
 

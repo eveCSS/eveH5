@@ -9,7 +9,7 @@ namespace eve {
 class IH5FileV5 : public IH5FileV4
 {
 public:
-    IH5FileV5(H5::H5File, string);
+    IH5FileV5(H5::H5File, string, float version);
 
 protected:
     virtual void addExtensionData(IData* data);

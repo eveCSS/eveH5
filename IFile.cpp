@@ -55,15 +55,15 @@ IFile::IFile(string filename)
                << (float)EVEH5VERSIONMINIMUM << " - " << (float)EVEH5VERSIONMAXIMUM << "\n");
 
     if (h5version >= 5.0)
-        ih5file = new IH5FileV5(h5file, filename);
+        ih5file = new IH5FileV5(h5file, filename, h5version);
     else if (h5version >= 4.0)
-        ih5file = new IH5FileV4(h5file, filename);
+        ih5file = new IH5FileV4(h5file, filename, h5version);
     else if (h5version >= 3.0)
-        ih5file = new IH5FileV3(h5file, filename);
+        ih5file = new IH5FileV3(h5file, filename, h5version);
     else if (h5version >= 2.0)
-        ih5file = new IH5FileV2(h5file, filename);
+        ih5file = new IH5FileV2(h5file, filename, h5version);
     else
-        ih5file = new IH5File(h5file, filename);
+        ih5file = new IH5File(h5file, filename, h5version);
 
     ih5file->init();
     return;

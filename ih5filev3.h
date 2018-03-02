@@ -8,8 +8,7 @@ namespace eve {
 class IH5FileV3 : public IH5FileV2
 {
 public:
-    IH5FileV3(H5::H5File, string);
-    virtual string getSectionString(Section);
+    IH5FileV3(H5::H5File, string, float version);
 };
 
 } // namespace end
