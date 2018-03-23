@@ -23,7 +23,7 @@ IData::IData(IMetaData& dInfo) : IMetaData(dInfo)
  * @brief          reduce or extent the data to the new list of posrefs
  * posrefs         list of new posrefs
  */
-IData::IData(IData& data, vector<int> posrefs, FillRule fillType) : IMetaData(data)
+IData::IData(IData& data, vector<int> posrefs, FillRule fillType, IData* snapdata) : IMetaData(data)
 {
     if (!isArrayData()){
         set<int> intarrs;
@@ -32,6 +32,26 @@ IData::IData(IData& data, vector<int> posrefs, FillRule fillType) : IMetaData(da
         int pcSize = posrefs.size();
         int lastint = INT_MIN;
         double lastdbl = NAN;
+        string laststring = "";
+
+        if ((fillType == LastFill) || (fillType == LastNANFill)){
+            if ((snapdata != NULL) && (!snapdata->isArrayData())) {
+                vector<int> snap_pc = snapdata->getPosReferences();
+                if ((snap_pc.size() > 0) && (posrefs.size() > 0) && (posrefs[0] > snap_pc[0])){
+                    int snap_idx=0;
+                    for (unsigned int i=0; i < snap_pc.size(); ++i) if (posrefs[0] > snap_pc[i]) snap_idx = i;
+                    if (snapdata->getDataType() == DTint32) {
+                        lastint = ((vector<int>*)snapdata->getDataPointer())->at(snap_idx);
+                    }
+                    else if (snapdata->getDataType() == DTfloat64) {
+                        lastdbl = ((vector<double>*)snapdata->getDataPointer())->at(snap_idx);
+                    }
+                    else if (snapdata->getDataType() == DTstring) {
+                        laststring = ((vector<string>*)snapdata->getDataPointer())->at(snap_idx);
+                    }
+                }
+            }
+        }
 
         // init
         for(auto const &vpair : data.intsptrmap) {
@@ -65,12 +85,14 @@ IData::IData(IData& data, vector<int> posrefs, FillRule fillType) : IMetaData(da
                 }
                 for (int j : strarrs){
                     strsptrmap.at(j)->at(pcidx) = data.strsptrmap.at(j)->at(idx);
+                    if (j == 0) laststring = data.strsptrmap.at(j)->at(idx);
                 }
                 ++idx;
             }
             else if (data.posCounts[idx] != newpc) {
                 int intval = INT_MIN;
                 double dblval = NAN;
+                string strval = "";
                 for (int j : intarrs){
                     if((j == 0) && ((fillType == LastFill) || (fillType == LastNANFill))) intval = lastint;
                     intsptrmap.at(j)->at(pcidx) = intval;
@@ -80,7 +102,8 @@ IData::IData(IData& data, vector<int> posrefs, FillRule fillType) : IMetaData(da
                     dblsptrmap.at(j)->at(pcidx) = dblval;
                 }
                 for (int j : strarrs){
-                    strsptrmap.at(j)->at(pcidx) = "";
+                    if((j == 0) && ((fillType == LastFill) || (fillType == LastNANFill))) strval = laststring;
+                    strsptrmap.at(j)->at(pcidx) = strval;
                 }
             }
             if (idx >= data.posCounts.size()) --idx;
@@ -139,14 +162,14 @@ void* IData::getDataPointer()
 {
     void *ptr = NULL;
     if (!isArrayData()) {
-        if ((datatype == DTint32) && (intsptrmap.find(0) != intsptrmap.end())) {
-            ptr = new vector<int>(*intsptrmap.at(0));
-        }
-        else if ((datatype == DTfloat64) && (dblsptrmap.find(0) != dblsptrmap.end())) {
+        if (((datatype == DTfloat64) || (datatype == DTfloat32)) && (dblsptrmap.find(0) != dblsptrmap.end())) {
             ptr = new vector<double>(*dblsptrmap.at(0));
         }
         else if ((datatype == DTstring) && (strsptrmap.find(0) != strsptrmap.end())){
             ptr = new vector<string>(*strsptrmap.at(0));
+        }
+        else if (intsptrmap.find(0) != intsptrmap.end()) {
+            ptr = new vector<int>(*intsptrmap.at(0));
         }
     }
     return ptr;

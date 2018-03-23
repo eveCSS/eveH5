@@ -160,12 +160,13 @@ public:
      */
     virtual void* getArrayDataPointer(unsigned int cnt)=0;
 
-    /** get pointer to a vector of corresponding type (not for array data).
+    /** get pointer to a vector of type int, double or string (not for array data).
      * Use this to retrieve a vector with all values
-     * Cast the pointer to a vector with type retrieved by getDataType().
+     * Cast the pointer to a vector with type vector<int> or vector<double> or vector<string>
+     * depending on the return value ofgetDataType().
      * The size of the vector may be derived from getDimension()[0]
      * This vector must be deleted after use.
-     * \return ptr address of the vector pointer (NULL if no array data or error)
+     * \return ptr address of a vector<int> or vector<double> or vector<string> (may be NULL)
      * \sa isArrayData()
      */
     virtual void* getDataPointer()=0;

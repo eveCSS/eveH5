@@ -897,8 +897,16 @@ vector<Data*> IH5File::getJoinedData(vector<MetaData*>& mdvec, FillRule fillType
     set<int> axisPosCounts;
     set<int> newlist;
     vector<int> posCounters;
+    vector<MetaData*> standardList;
+    map<string, MetaData*> snapshotMap;
 
     if (mdvec.size() == 0) return moddatavect;
+
+    for (MetaData* mdata: mdvec)
+        if ((mdata->getSection() == Standard) || (mdata->getSection() == Timestamp))
+            standardList.push_back(mdata);
+        else if (mdata->getSection() == Snapshot)
+            snapshotMap.insert(pair<string, MetaData*>(mdata->getId(), mdata));
 
     for (vector<MetaData*>::iterator mdit=mdvec.begin(); mdit != mdvec.end(); ++mdit){
         IData* idat = (IData*) getData((IMetaData*)*mdit);
@@ -924,11 +932,20 @@ vector<Data*> IH5File::getJoinedData(vector<MetaData*>& mdvec, FillRule fillType
 
     posCounters.insert(posCounters.begin(),newlist.begin(), newlist.end());
 
-    for (vector<IData*>::iterator mdit=datavect.begin(); mdit != datavect.end(); ++mdit){
-        IData* newData = *mdit;
+    for (vector<IData*>::iterator datait=datavect.begin(); datait != datavect.end(); ++datait){
+        IData* newData = *datait;
         if ((newData->posCounts.size() != posCounters.size()) || (newData->posCounts != posCounters)) {
-            newData = new IData(*newData, posCounters, fillType);
-            delete *mdit;
+            if (((fillType == LastFill) || (fillType == LastNANFill))
+                    && (newData->getDeviceType() == Axis)
+                    && snapshotMap.find(newData->getId()) != snapshotMap.end()){
+                // need to fill in start value from snapshot
+                IData* snapData = (IData*) getData((IMetaData*)snapshotMap.find(newData->getId())->second);
+                newData = new IData(*newData, posCounters, fillType, snapData);
+            }
+            else {
+                newData = new IData(*newData, posCounters, fillType);
+            }
+            delete *datait;
         }
         moddatavect.push_back(newData);
     }

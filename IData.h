@@ -39,7 +39,7 @@ class IData : public IMetaData, public Data
 
 public:
     IData(IMetaData&);
-    IData(IData&, vector<int>, FillRule fillType);
+    IData(IData&, vector<int>, FillRule fillType, IData *snapdata=NULL);
     virtual ~IData();
 
     string getName(){return IMetaData::getName();};
