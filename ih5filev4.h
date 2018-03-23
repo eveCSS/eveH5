@@ -10,6 +10,7 @@ class IH5FileV4 : public IH5FileV3
 {
 public:
     IH5FileV4(H5::H5File, string, float version);
+    string getSectionString(Section sect);
 };
 
 } // namespace end
