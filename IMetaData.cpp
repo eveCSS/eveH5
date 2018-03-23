@@ -58,6 +58,10 @@ IMetaData::IMetaData(string basep, string calc, string h5n, Section section, map
         else if (devtypestr.compare("Channel") == 0)
             devtype = Channel;
     }
+    if (selSection == Timestamp) {
+        devtype = Channel;
+        name = "PosCountTimer";
+    }
 
 }
 
