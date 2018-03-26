@@ -622,7 +622,7 @@ void IH5File::readDataPCOneCol(IData* data){
         }
         else if (data->datatype == DTstring) {
             string tmpstring(memptr + 4, element_size-4);
-            data->strsptrmap.at(STRVECT1)->at(i) = tmpstring;
+            data->strsptrmap.at(STRVECT1)->at(i) = string(tmpstring.c_str());
         }
         else
             typeerror = true;
@@ -908,7 +908,7 @@ vector<Data*> IH5File::getJoinedData(vector<MetaData*>& mdvec, FillRule fillType
         else if (mdata->getSection() == Snapshot)
             snapshotMap.insert(pair<string, MetaData*>(mdata->getId(), mdata));
 
-    for (vector<MetaData*>::iterator mdit=mdvec.begin(); mdit != mdvec.end(); ++mdit){
+    for (vector<MetaData*>::iterator mdit=standardList.begin(); mdit != standardList.end(); ++mdit){
         IData* idat = (IData*) getData((IMetaData*)*mdit);
         if (idat != NULL) datavect.push_back(idat);
         DeviceType deviceType = idat->getDeviceType();
