@@ -76,6 +76,8 @@ string IMetaData::getUnit(){
 
     if (attributes.count("Unit") > 0)
         return attributes.find("Unit")->second;
+    else if (attributes.count("unit") > 0)
+        return attributes.find("unit")->second;
      else
         return string("");
 }
