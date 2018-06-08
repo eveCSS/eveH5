@@ -32,9 +32,9 @@ IData::IData(IData& data, vector<int> posrefs, FillRule fillType, IData* snapdat
         int pcSize = posrefs.size();
         int lastint = INT_MIN;
         double lastdbl = NAN;
-        string laststring = "";
+        string laststring = "NaN";
 
-        if ((fillType == LastFill) || (fillType == LastNANFill)){
+        if (((fillType == LastFill) || (fillType == LastNANFill)) && (data.getDeviceType() == Axis)){
             if ((snapdata != NULL) && (!snapdata->isArrayData())) {
                 vector<int> snap_pc = snapdata->getPosReferences();
                 if ((snap_pc.size() > 0) && (posrefs.size() > 0) && (posrefs[0] > snap_pc[0])){
@@ -92,17 +92,17 @@ IData::IData(IData& data, vector<int> posrefs, FillRule fillType, IData* snapdat
             else if (data.posCounts[idx] != newpc) {
                 int intval = INT_MIN;
                 double dblval = NAN;
-                string strval = "";
+                string strval = "NaN";
                 for (int j : intarrs){
-                    if((j == 0) && ((fillType == LastFill) || (fillType == LastNANFill))) intval = lastint;
+                    if((j == 0) && ((fillType == LastFill) || (fillType == LastNANFill)) && (data.getDeviceType() == Axis)) intval = lastint;
                     intsptrmap.at(j)->at(pcidx) = intval;
                 }
                 for (int j : dblarrs){
-                    if((j == 0) && ((fillType == LastFill) || (fillType == LastNANFill))) dblval = lastdbl;
+                    if((j == 0) && ((fillType == LastFill) || (fillType == LastNANFill)) && (data.getDeviceType() == Axis)) dblval = lastdbl;
                     dblsptrmap.at(j)->at(pcidx) = dblval;
                 }
                 for (int j : strarrs){
-                    if((j == 0) && ((fillType == LastFill) || (fillType == LastNANFill))) strval = laststring;
+                    if((j == 0) && ((fillType == LastFill) || (fillType == LastNANFill)) && (data.getDeviceType() == Axis)) strval = laststring;
                     strsptrmap.at(j)->at(pcidx) = strval;
                 }
             }
