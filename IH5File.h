@@ -51,7 +51,7 @@ protected:
     void readDataArray(IData* data);
     void readDataPCOneCol(IData* data);
     void readDataPCTwoCol(IData* data);
-    void copyAndFill(IData *srcdata,eve::DataType srctype, int srccol, IData *dstdata, eve::DataType dsttype, int dstcol);
+    void copyAndFill(IData *srcdata,eve::DataType srctype, int srccol, IData *dstdata, eve::DataType dsttype, int dstcol, vector<int> excl=vector<int>());
     virtual void addExtensionData(IData* data);
     void openGroup(Group& h5group, string path);
     void closeGroup(Group& h5group);

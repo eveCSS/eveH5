@@ -721,14 +721,30 @@ void IH5File::readDataPCTwoCol(IData* data){
 void IH5File::addExtensionData(IData* data){
 
     string datasetname = data->getH5name();
-    if (data->getNormalizeId().size() > 0) datasetname = data->getId();
+    vector<int> exclusions;
+    if (data->getNormalizeId().size() > 0)
+        datasetname = data->getId();
+    else {
+        // since the name of averagemetadata is ambigous in all EVEH5 versions up to 4.0, use normalized data if any
+        for (vector<IMetaData *>::iterator it = chainmeta.begin(); it != chainmeta.end(); ++it){
+            IMetaData* mdat = *it;
+            if ((mdat->getId().compare(data->getId()) == 0) && (mdat->getNormalizeId().size() > 0)){
+                IData* normdata = new IData(*mdat);
+                if (mdat->dstype == EVEDSTPCOneColumn) readDataPCOneCol(normdata);
+                exclusions = normdata->getPosReferences();
+                delete normdata;
+                break;
+            }
+        }
+        if (exclusions == data->getPosReferences()) return;
+    }
     string fullh5name = data->getPath() + "averagemeta/" + datasetname + "__AverageCount";
     MetaData *extensionmd = findMetaData(extensionmeta, fullh5name);
     if (extensionmd != NULL){
         IData* avdata = new IData((IMetaData&)*extensionmd);
         readDataPCTwoCol(avdata);
-        copyAndFill(avdata, DTint32, INTVECT1, data, DTint32, AVCOUNT);
-        copyAndFill(avdata, DTint32, INTVECT2, data, DTint32, AVATT);
+        copyAndFill(avdata, DTint32, INTVECT1, data, DTint32, AVCOUNT, exclusions);
+        copyAndFill(avdata, DTint32, INTVECT2, data, DTint32, AVATT, exclusions);
         delete avdata;
     }
     fullh5name = data->getPath() + "averagemeta/" + datasetname + "__Limit";
@@ -736,8 +752,8 @@ void IH5File::addExtensionData(IData* data){
     if (extensionmd != NULL){
         IData* avdata = new IData((IMetaData&)*extensionmd);
         readDataPCTwoCol(avdata);
-        copyAndFill(avdata, DTfloat64, DBLVECT1, data, DTfloat64, AVLIMIT);
-        copyAndFill(avdata, DTfloat64, DBLVECT2, data, DTfloat64, AVMAXDEV);
+        copyAndFill(avdata, DTfloat64, DBLVECT1, data, DTfloat64, AVLIMIT, exclusions);
+        copyAndFill(avdata, DTfloat64, DBLVECT2, data, DTfloat64, AVMAXDEV, exclusions);
         delete avdata;
     }
     fullh5name = data->getPath() + "averagemeta/" + datasetname + "__MaxAttempts";
@@ -745,7 +761,7 @@ void IH5File::addExtensionData(IData* data){
     if (extensionmd != NULL){
         IData* avdata = new IData((IMetaData&)*extensionmd);
         readDataPCOneCol(avdata);
-        copyAndFill(avdata, DTint32, INTVECT1, data, DTint32, AVATTPR);
+        copyAndFill(avdata, DTint32, INTVECT1, data, DTint32, AVATTPR, exclusions);
         delete avdata;
     }
     fullh5name = data->getPath() + "standarddev/" + datasetname + "__Count";
@@ -753,13 +769,13 @@ void IH5File::addExtensionData(IData* data){
     if (extensionmd != NULL){
         IData* avdata = new IData((IMetaData&)*extensionmd);
         readDataPCTwoCol(avdata);
-        copyAndFill(avdata, DTfloat64, DBLVECT1, data, DTint32, STDDEVCOUNT);
-        copyAndFill(avdata, DTfloat64, DBLVECT2, data, DTfloat64, STDDEV);
+        copyAndFill(avdata, DTfloat64, DBLVECT1, data, DTint32, STDDEVCOUNT, exclusions);
+        copyAndFill(avdata, DTfloat64, DBLVECT2, data, DTfloat64, STDDEV, exclusions);
         delete avdata;
     }
 }
 
-void IH5File::copyAndFill(IData *srcdata, eve::DataType srctype, int srccol, IData *dstdata, eve::DataType dsttype, int dstcol){
+void IH5File::copyAndFill(IData *srcdata, eve::DataType srctype, int srccol, IData *dstdata, eve::DataType dsttype, int dstcol, vector<int> excl){
 
     if (((srctype != DTint32) && (srctype != DTfloat64)) || ((dsttype != DTint32) && (dsttype != DTfloat64)))
         STHROW("unsupported datatype, currently only int32 or float64 are supported for data conversion (src)");
@@ -789,6 +805,8 @@ void IH5File::copyAndFill(IData *srcdata, eve::DataType srctype, int srccol, IDa
             dstdata->dblsptrmap.insert(pair<int, shared_ptr<vector<double>>>(dstcol, make_shared<vector<double>>(dstPosCounts.size())));
         }
 
+        unsigned int exclidx = 0;
+        unsigned int exclsize = excl.size() ;
         unsigned int srcidx = 0;
         int srcposcountsize = srcPosCounts.size();
         unsigned int srcsize;
@@ -799,9 +817,14 @@ void IH5File::copyAndFill(IData *srcdata, eve::DataType srctype, int srccol, IDa
             srcsize = srcdata->dblsptrmap.at(srccol)->size();
 
         for (unsigned int i=0; i < dstPosCounts.size(); ++i){
+            bool noexclude = true;
             int dstposcnt = dstPosCounts.at(i);
             while ((srcdata->posCounts[srcidx] < dstposcnt) && (srcidx < srcsize - 1)) ++ srcidx;
-            if ((srcposcountsize > 0) && (dstposcnt == srcdata->posCounts[srcidx])){
+            if (exclsize > 0){
+                while ((exclidx < (unsigned int) dstposcnt) && (exclidx < exclsize - 1)) ++exclidx;
+                if (dstposcnt == excl.at(exclidx)) noexclude = false;
+            }
+            if ((srcposcountsize > 0) && (dstposcnt == srcdata->posCounts[srcidx]) && noexclude){
                 if (srcdata->getDataType() == DTint32){
                     if (dsttype == DTint32)
                         dstdata->intsptrmap.at(dstcol)->at(i) = srcdata->intsptrmap.at(srccol)->at(srcidx);
@@ -829,7 +852,7 @@ void IH5File::copyAndFill(IData *srcdata, eve::DataType srctype, int srccol, IDa
             }
             else {
                 if (dsttype == DTint32)
-                    dstdata->intsptrmap.at(dstcol)->at(i) = -1;
+                    dstdata->intsptrmap.at(dstcol)->at(i) = INT_MIN;
                 else
                     dstdata->dblsptrmap.at(dstcol)->at(i) = NAN;
             }
@@ -898,13 +921,16 @@ vector<Data*> IH5File::getJoinedData(vector<MetaData*>& mdvec, FillRule fillType
     set<int> newlist;
     vector<int> posCounters;
     vector<MetaData*> standardList;
+    vector<MetaData*> timeStampList;
     map<string, MetaData*> snapshotMap;
 
     if (mdvec.size() == 0) return moddatavect;
 
     for (MetaData* mdata: mdvec)
-        if ((mdata->getSection() == Standard) || (mdata->getSection() == Timestamp))
+        if (mdata->getSection() == Standard)
             standardList.push_back(mdata);
+        else if (mdata->getSection() == Timestamp)
+            timeStampList.push_back(mdata);
         else if (mdata->getSection() == Snapshot)
             snapshotMap.insert(pair<string, MetaData*>(mdata->getId(), mdata));
 
@@ -920,17 +946,33 @@ vector<Data*> IH5File::getJoinedData(vector<MetaData*>& mdvec, FillRule fillType
         }
 
     }
+
     if (fillType == NoFill) {
+        if ((channelPosCounts.size() == 0) || (axisPosCounts.size() == 0)) return moddatavect;
         for (set<int>::iterator it=axisPosCounts.begin(); it != axisPosCounts.end(); ++it){
             if (channelPosCounts.find(*it) != channelPosCounts.end()) newlist.insert(*it);
         }
     }
-    if ((fillType == LastFill) || (fillType == LastNANFill))
+    else if (fillType == LastFill) {
+        if (channelPosCounts.size() == 0) return moddatavect;
         newlist.insert(channelPosCounts.begin(), channelPosCounts.end());
-    if((fillType == NANFill) || (fillType == LastNANFill))
+    }
+    else if (fillType == NANFill) {
+        if (axisPosCounts.size() == 0) return moddatavect;
         newlist.insert(axisPosCounts.begin(), axisPosCounts.end());
+    }
+    else if (fillType == LastNANFill) {
+        if ((axisPosCounts.size() == 0) && (channelPosCounts.size() == 0)) return moddatavect;
+        newlist.insert(axisPosCounts.begin(), axisPosCounts.end());
+        newlist.insert(channelPosCounts.begin(), channelPosCounts.end());
+    }
 
     posCounters.insert(posCounters.begin(),newlist.begin(), newlist.end());
+    // add timestamp here, because it is not used to calc posCounters
+    for (vector<MetaData*>::iterator mdit=timeStampList.begin(); mdit != timeStampList.end(); ++mdit){
+        IData* idat = (IData*) getData((IMetaData*)*mdit);
+        if (idat != NULL) datavect.push_back(idat);
+    }
 
     for (vector<IData*>::iterator datait=datavect.begin(); datait != datavect.end(); ++datait){
         IData* newData = *datait;
