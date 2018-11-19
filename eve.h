@@ -2,7 +2,6 @@
 #define EVEH5_H
 
 #include <string>
-#include <map>
 #include <vector>
 #include <list>
 
@@ -48,6 +47,16 @@ enum DeviceType
     Unknown,    /**< unknown */
     Channel,    /**< channel  */
     Axis        /**< axis  */
+};
+
+/** detector type (standard, interval)
+*
+*/
+enum DetectorType
+{
+    None,    /**< unknown detector type */
+    Std,     /**< standard detector  */
+    Intv     /**< interval detector  */
 };
 
 /** section (data to work with)
@@ -121,21 +130,114 @@ public:
      */
     virtual Section getSection()=0;
 
-    /** get a hash with attributes as key/value pairs
-     * \return return a key/value hash
+    /** get the transport type
+     * \return transport string
      */
-    virtual std::map<std::string, std::string>& getAttributes()=0;
+    virtual std::string getTransportType()=0;
+
+    /** get the ProcessVariable (Epics) or other unique device specifier
+     * \return pv string
+     */
+    virtual std::string getPV()=0;
 
     /** get the device type (axis, channel)
      * \return device type
      */
     virtual DeviceType getDeviceType()=0;
 
+    /** get the detector type (standard, interval)
+     * \return device type
+     */
+    virtual DetectorType getDetectorType()=0;
+
     /** get data type
      * \return datatype
      */
     virtual DataType getDataType()=0;
 
+};
+
+class FileMetaData
+{
+public:
+    virtual ~FileMetaData(){};
+
+    /** Returns the configured comment of the scan or an empty string
+     * \return comment string
+     */
+    virtual std::string getComment()=0;
+
+    /** Returns the eve H5 version of the file
+     * \return version string
+     */
+    virtual std::string getH5Version()=0;
+
+    /** Returns the xml Version of the scan description file
+     * \return version string
+     */
+    virtual std::string getXmlVersion()=0;
+
+    /** Returns the evEngine version the file was executed with
+     * \return version string
+     */
+    virtual std::string getEveVersion()=0;
+
+    /** Returns the name of the experiment
+     * \return location string
+     */
+    virtual std::string getLocation()=0;
+
+    /** Returns the time the scan started executing in ISO-8601
+     * \return datetime string
+     */
+    virtual std::string getStartTime()=0;
+
+    /** Returns the time the scan finished executing in ISO-8601
+     * \return datetime string
+     */
+    virtual std::string getEndTime()=0;
+
+    /** Returns the author of the scml File or an empty string
+     * \return author string
+     */
+    virtual std::string getScmlAuthor()=0;
+
+    /** Returns the name of the scml File or an empty string
+     * \return name string
+     */
+    virtual std::string getScmlName()=0;
+
+};
+
+class ChainMetaData
+{
+public:
+    virtual ~ChainMetaData(){};
+
+    /** Returns the id of the axis (which could be) of interest or an empty string if none.
+     * \return axisid string
+     */
+    virtual std::string getPreferredAxis()=0;
+
+    /** Returns the eve H5 version of the file
+     * \return channelid string
+     */
+    virtual std::string getPreferredChannel()=0;
+
+    /** Returns the xml Version of the scan description file
+     * \return normalization channelid string
+     */
+    virtual std::string getPreferredNormalizationChannel()=0;
+
+    /** Returns the time the scan started executing in ISO-8601
+     * \return datetime string
+     */
+    virtual std::string getStartTime()=0;
+
+    /** Returns the time the scan finished executing in ISO-8601
+     * \return datetime string
+     */
+    virtual std::string getEndTime()=0;
 };
 
 class Data : public MetaData
@@ -262,12 +364,12 @@ public:
     /** Retrieve a hash with metadata of selected chain as key/value pairs.
      * \return return a key/value hash
      */
-    virtual std::map<std::string, std::string> getChainMetaData()=0;
+    virtual ChainMetaData* getChainMetaData()=0;
 
     /** Retrieve a hash with file metadata  as key/value pairs.
      * \return return a key/value hash
      */
-    virtual std::map<std::string, std::string> getFileMetaData()=0;
+    virtual FileMetaData* getFileMetaData()=0;
 
     /**
      * @brief Retrieve metadata objects for the specified section in selected chain.

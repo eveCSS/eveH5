@@ -13,6 +13,8 @@
 #include "H5Cpp.h"
 #include "IData.h"
 #include "IMetaData.h"
+#include "ifilemetadata.h"
+#include "ichainmetadata.h"
 
 #ifndef H5_NO_NAMESPACE
      using namespace H5;
@@ -33,8 +35,8 @@ public:
     virtual vector<int> getChains(){return chainList;};
     virtual int getChain(){return selectedChain;};
     virtual void setChain(int chain);
-    virtual map<string, string>& getChainMetaData(){return chainAttributes;};
-    virtual map<string, string>& getFileMetaData(){return rootAttributes;};
+    virtual IChainMetaData* getChainMetaData(){return new IChainMetaData(chainAttributes);};
+    virtual IFileMetaData* getFileMetaData(){return new IFileMetaData(rootAttributes);};
     virtual void chainInventory();
     virtual vector<MetaData *> getMetaData(Section section, string str);
     virtual vector<Data*> getData(vector<MetaData*>& mdvec);

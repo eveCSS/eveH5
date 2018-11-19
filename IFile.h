@@ -29,8 +29,8 @@ public:
     vector<int> getChains(){return ih5file->getChains();};
     int getChain(){return ih5file->getChain();};
     void setChain(int chain){ih5file->setChain(chain);};
-    map<string, string> getChainMetaData(){return ih5file->getChainMetaData();};
-    map<string, string> getFileMetaData(){return ih5file->getFileMetaData();};
+    ChainMetaData* getChainMetaData(){return ih5file->getChainMetaData();};
+    FileMetaData* getFileMetaData(){return ih5file->getFileMetaData();};
     vector<MetaData *> getMetaData(Section section, string str){return ih5file->getMetaData(section, str);};
     vector<Data*> getData(vector<MetaData*>& mdvec){return ih5file->getData(mdvec);};
     vector<Data*> getJoinedData(vector<MetaData*>& mdvec, FillRule fill=NoFill){return ih5file->getJoinedData(mdvec, fill);};

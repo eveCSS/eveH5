@@ -49,8 +49,10 @@ public:
     string getNormalizeId(){return IMetaData::getNormalizeId();};
     pair<unsigned int, unsigned int> getDimension(){return IMetaData::getDimension();};
     Section getSection(){return IMetaData::getSection();};
-    map<std::string, std::string>& getAttributes(){return IMetaData::getAttributes();};
     DeviceType getDeviceType(){return IMetaData::getDeviceType();};
+    DetectorType getDetectorType(){return IMetaData::getDetectorType();};
+    string getTransportType(){return IMetaData::getTransportType();};
+    string getPV(){return IMetaData::getPV();};
     eve::DataType getDataType(){return IMetaData::getDataType();};
 
     vector<int> getPosReferences(){return posCounts;};

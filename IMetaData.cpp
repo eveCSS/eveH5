@@ -82,6 +82,34 @@ string IMetaData::getUnit(){
         return string("");
 }
 
+DetectorType IMetaData::getDetectorType(){
+    if (getAttribute("Detectortype", 0) == "Standard")
+        return DetectorType::Std;
+     else if (getAttribute("Detectortype", 0) == "Interval")
+        return DetectorType::Intv;
+    return DetectorType::None;
+}
+
+string IMetaData::getAttribute(string target, int substrnr){
+
+    string retval = "";
+    if (attributes.count(target) > 0) {
+        retval = attributes.find(target)->second;
+        if (substrnr > 0) {
+            size_t found=retval.find(':');
+              if (found!=string::npos) {
+                if (substrnr == 1)
+                    retval = retval.substr(0, found);
+                else if (substrnr == 2)
+                    retval = retval.substr(found+1, string::npos);
+                }
+              else
+                retval = "";
+        }
+    }
+    return retval;
+}
+
 void IMetaData::setDataType(DataSet& ds){
 
     try {

@@ -70,7 +70,12 @@ void IH5File::init()
     if (haveGroupWithName(root, "device")){
         Group devices;
         openGroup(devices, "/device");
-        parseDatasets(devices, "/device", monitormeta, "", Monitor);
+        try {
+            parseDatasets(devices, "/device", monitormeta, "", Monitor);
+        }
+        catch (Exception error){
+            STHROW("Error parsing file " << filename << "; H5 Error: " << error.getDetailMsg() );
+        }
         closeGroup(devices);
     }
     closeGroup(root);
@@ -79,6 +84,7 @@ void IH5File::init()
 IH5File::~IH5File()
 {
 //    close();
+    if (isOpen) h5file.close();
     isOpen = false;
     chainList.clear();
     rootAttributes.clear();
@@ -90,12 +96,14 @@ IH5File::~IH5File()
     for (IMetaData* mdata: monitormeta) delete mdata;
     monitormeta.clear();
     if (timestampMeta != NULL) delete timestampMeta;
+/*  do not throw exceptions in destructor
     try {
         h5file.close();
     }
     catch (Exception error){
         STHROW("Error closing file; H5 Error: " << error.getDetailMsg() );
     }
+*/
 }
 
 bool IH5File::isChainSection(string name){
@@ -871,8 +879,9 @@ void IH5File::copyAndFill(IData *srcdata, eve::DataType srctype, int srccol, IDa
 vector<string> IH5File::getLogData(){
 
     vector<string> stringlist;
+
     StrType tid1(0, H5T_VARIABLE);
-    hid_t		native_type;
+//    hid_t		native_type;
     hsize_t dims;
     DataSet h5dset;
 
@@ -887,12 +896,12 @@ vector<string> IH5File::getLogData(){
     h5dset.getSpace().getSimpleExtentDims( &dims, NULL);
 
     /* Construct native type */
-    if((native_type=H5Tget_native_type(h5dtype.getId(), H5T_DIR_DEFAULT)) < 0 )
-        cerr << "get LiveComment: H5Tget_native_type  failed!!! " << endl;
+//    if((native_type=H5Tget_native_type(h5dtype.getId(), H5T_DIR_DEFAULT)) < 0 )
+//        cerr << "get LiveComment: H5Tget_native_type  failed!!! " << endl;
 
     /* Check if the data type is equal */
-    if(!H5Tequal(native_type, tid1.getId()))
-        cerr << "get LiveComment: native type is not var length string!!!" << endl;
+//    if(!H5Tequal(native_type, tid1.getId()))
+//        cerr << "get LiveComment: native type is not var length string!!!" << endl;
 
     char *rdata[dims];   /* Information read in */
     try {
@@ -903,12 +912,11 @@ vector<string> IH5File::getLogData(){
         return stringlist;
     }
     /* Validate and print data read in */
-    cout << "data read:" << endl;
     for(unsigned i=0; i<dims; i++) {
         stringlist.push_back(string(rdata[i]));
         free(rdata[i]);
     }
-    cout << endl;
+
     return stringlist;
 }
 

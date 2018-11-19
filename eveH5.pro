@@ -24,7 +24,10 @@ SOURCES += \
     ih5filev2.cpp \
     ih5filev3.cpp \
     ih5filev4.cpp \
-    ih5filev5.cpp
+    ih5filev5.cpp \
+    attributemetadata.cpp \
+    ifilemetadata.cpp \
+    ichainmetadata.cpp
 
 HEADERS += \
     eve.h \
@@ -35,17 +38,20 @@ HEADERS += \
     ih5filev2.h \
     ih5filev3.h \
     ih5filev4.h \
-    ih5filev5.h
+    ih5filev5.h \
+    attributemetadata.h \
+    ifilemetadata.h \
+    ichainmetadata.h
 
 #linux-g++-32 {
 #    LIBS +=  -L/home/eden/src/hdf5/hdf5-1.8.9/hdf5/lib-static
 #}
 
 linux-g++-64 {
-    LIBS +=  -L/home/eden/src/hdf5/hdf5-1.10.1/hdf5/lib64
+    LIBS +=  -L/home/eden/src/hdf5/hdf5-1.10.1-gcc7/hdf5/lib64
 }
 
-unix:INCLUDEPATH += /home/eden/src/hdf5/hdf5-1.10.1/hdf5/include
+unix:INCLUDEPATH += /home/eden/src/hdf5/hdf5-1.10.1-gcc7/hdf5/include
 
 LIBS +=  -l:libhdf5_cpp.a -l:libhdf5.a -lz
 

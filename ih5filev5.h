@@ -13,6 +13,7 @@ public:
 
 protected:
     virtual void addExtensionData(IData* data);
+    virtual vector<string> getLogData();
 };
 
 } // namespace end

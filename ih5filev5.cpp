@@ -55,4 +55,48 @@ void IH5FileV5::addExtensionData(IData* data){
     }
 }
 
+vector<string> IH5FileV5::getLogData(){
+
+    vector<string> stringlist;
+    StrType tid1(0, H5T_VARIABLE);
+    hid_t		native_type;
+    hsize_t dims;
+    DataSet h5dset;
+
+    try {
+        h5dset = h5file.openDataSet("/LiveComment");
+    }
+    catch (Exception error) {
+        return stringlist;
+    }
+
+    H5::DataType h5dtype = h5dset.getDataType();
+    h5dset.getSpace().getSimpleExtentDims( &dims, NULL);
+
+    /* Construct native type */
+    if((native_type=H5Tget_native_type(h5dtype.getId(), H5T_DIR_DEFAULT)) < 0 )
+        cerr << "get LiveComment: H5Tget_native_type  failed!!! " << endl;
+
+    /* Check if the data type is equal */
+    if(!H5Tequal(native_type, tid1.getId()))
+        cerr << "get LiveComment: native type is not var length string!!!" << endl;
+
+    char *rdata[dims];   /* Information read in */
+    try {
+        h5dset.read((void*)rdata, h5dtype);
+    }
+    catch (Exception error) {
+        stringlist.push_back("error reading LiveComment");
+        return stringlist;
+    }
+    /* Validate and print data read in */
+    for(unsigned i=0; i<dims; i++) {
+        if (rdata[i] != NULL){
+            stringlist.push_back(string(rdata[i]));
+            free(rdata[i]);
+        }
+    }
+    return stringlist;
+}
+
 } // namespace end

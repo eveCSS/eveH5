@@ -41,7 +41,7 @@ IFile::IFile(string filename)
             return;
         }
     }
-    catch (Exception error){
+    catch (H5::Exception error){
         STHROW("Error opening file " << filename << "; H5 Error: " << error.getDetailMsg() );
     }
 
@@ -65,7 +65,22 @@ IFile::IFile(string filename)
     else
         ih5file = new IH5File(h5file, filename, h5version);
 
-    ih5file->init();
+    try {
+        ih5file->init();
+    }
+    catch (Exception error){
+        string errormessage = "";
+
+        try {
+            if (ih5file != NULL) delete ih5file;
+        }
+        catch(Exception error){
+            errormessage = error.getDetailMsg();
+        }
+
+        ih5file = NULL;
+        STHROW("Error during init" << filename << "; H5 Error: " << error.getDetailMsg() );
+    }
     return;
 }
 

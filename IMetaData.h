@@ -29,7 +29,9 @@ public:
     virtual string getNormalizeId(){return normalizeId;};
     virtual pair<unsigned int, unsigned int> getDimension(){return pair<unsigned int, unsigned int>(dim0, dim1);};
     virtual Section getSection(){return selSection;};
-    virtual map<string, string>& getAttributes(){return attributes;};
+    virtual string getTransportType(){return getAttribute("Access", 1);};
+    virtual string getPV(){return getAttribute("Access", 2);};
+    virtual DetectorType getDetectorType();
     virtual DeviceType getDeviceType(){return devtype;};
     virtual eve::DataType getDataType(){return datatype;};
 
@@ -38,6 +40,7 @@ protected:
     virtual string getH5name(){return h5name;};
     virtual string getFQH5Name();
     void setDataType(DataSet& ds);
+    virtual string getAttribute(string, int);
     Section selSection;
     string path;
     string calculation;
