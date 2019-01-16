@@ -31,11 +31,12 @@ public:
     void setChain(int chain){ih5file->setChain(chain);};
     ChainMetaData* getChainMetaData(){return ih5file->getChainMetaData();};
     FileMetaData* getFileMetaData(){return ih5file->getFileMetaData();};
-    vector<MetaData *> getMetaData(Section section, string str){return ih5file->getMetaData(section, str);};
+    vector<MetaData *> getMetaData(Section section, string id, string name){return ih5file->getMetaData(section, id, name);};
     vector<Data*> getData(vector<MetaData*>& mdvec){return ih5file->getData(mdvec);};
     vector<Data*> getJoinedData(vector<MetaData*>& mdvec, FillRule fill=NoFill){return ih5file->getJoinedData(mdvec, fill);};
     vector<Data*> getPreferredData(FillRule fill){return ih5file->getPreferredData(fill);};
     vector<string> getLogData(){return ih5file->getLogData();};
+    string getNameById(Section section, std::string id){return ih5file->getNameById(section, id);};
 
 private:
     IH5File* ih5file;

@@ -84,10 +84,10 @@ string IMetaData::getUnit(){
 
 DetectorType IMetaData::getDetectorType(){
     if (getAttribute("Detectortype", 0) == "Standard")
-        return DetectorType::Std;
+        return DetectorType::DETstandard;
      else if (getAttribute("Detectortype", 0) == "Interval")
-        return DetectorType::Intv;
-    return DetectorType::None;
+        return DetectorType::DETinterval;
+    return DetectorType::DETunknown;
 }
 
 string IMetaData::getAttribute(string target, int substrnr){

@@ -54,9 +54,9 @@ enum DeviceType
 */
 enum DetectorType
 {
-    None,    /**< unknown detector type */
-    Std,     /**< standard detector  */
-    Intv     /**< interval detector  */
+    DETunknown,     /**< unknown detector type */
+    DETstandard,    /**< standard detector  */
+    DETinterval     /**< interval detector  */
 };
 
 /** section (data to work with)
@@ -219,22 +219,22 @@ public:
      */
     virtual std::string getPreferredAxis()=0;
 
-    /** Returns the eve H5 version of the file
+    /** Returns the id of the channel (which could be) of interest or an empty string if none.
      * \return channelid string
      */
     virtual std::string getPreferredChannel()=0;
 
-    /** Returns the xml Version of the scan description file
+    /** Returns the id of the normalization channel (which could be) of interest or an empty string if none.
      * \return normalization channelid string
      */
     virtual std::string getPreferredNormalizationChannel()=0;
 
-    /** Returns the time the scan started executing in ISO-8601
+    /** Returns the time the chain started executing in ISO-8601
      * \return datetime string
      */
     virtual std::string getStartTime()=0;
 
-    /** Returns the time the scan finished executing in ISO-8601
+    /** Returns the time the chain finished executing in ISO-8601
      * \return datetime string
      */
     virtual std::string getEndTime()=0;
@@ -371,13 +371,19 @@ public:
      */
     virtual FileMetaData* getFileMetaData()=0;
 
+    /** Retrieve a string with the name of the device with identification id or empty string
+     * \return return name for id
+     */
+    virtual std::string getNameById(Section section, std::string id)=0;
+
     /**
      * @brief Retrieve metadata objects for the specified section in selected chain.
      * @param section
-     * @param filter select only metadata which contain this string as XML-ID
+     * @param id if not empty, select metada with XML-ID id
+     * @param id if not empty, select metada with Name name
      * @return MetaData list of metadata pointers
      */
-    virtual std::vector<MetaData *> getMetaData(Section section, std::string filter="")=0;
+    virtual std::vector<MetaData *> getMetaData(Section section, std::string id="", std::string name="")=0;
 
     /** Retrieve a list of data objects.
      *
@@ -397,14 +403,14 @@ public:
      * \param fill desired fill rule
      * \return list of data pointers (delete after use)
      */
-    virtual std::vector<Data*>  getJoinedData(std::vector<MetaData*>& metadatalist, FillRule fill=NoFill)=0;
+    virtual std::vector<Data*> getJoinedData(std::vector<MetaData*>& metadatalist, FillRule fill=NoFill)=0;
 
     /** Retrieve joined data for data marked as preferred in selected chain.
      *
      * \param fill desired fill rule
      * \return list of data pointers (delete after use)
      */
-    virtual std::vector<Data*>  getPreferredData(FillRule fill=NoFill)=0;
+    virtual std::vector<Data*> getPreferredData(FillRule fill=NoFill)=0;
 
     /** Retrieve log
      *

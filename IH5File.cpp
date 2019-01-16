@@ -241,7 +241,7 @@ void IH5File::chainInventory(){
     closeGroup(chain);
 }
 
-vector<MetaData *> IH5File::getMetaData(Section section, string filter){
+vector<MetaData *> IH5File::getMetaData(Section section, string id, string name){
     vector<MetaData *> result;
     string path = getSectionString(section);
     if (path.size() == 0) {
@@ -252,14 +252,43 @@ vector<MetaData *> IH5File::getMetaData(Section section, string filter){
         if (timestampMeta != NULL) result.push_back(new IMetaData(*timestampMeta));
     }
     else if (section == Monitor)
-        result = getMetaData(&monitormeta, path, filter);
+        result = getMetaData(&monitormeta, path, id, name);
     else
-        result = getMetaData(&chainmeta, path, filter);
+        result = getMetaData(&chainmeta, path, id, name);
 
     return result;
 }
 
-vector<MetaData *> IH5File::getMetaData(vector<IMetaData *> *devlist, string path, string filter){
+string IH5File::getNameById(Section section, string id){
+
+    string path = getSectionString(section);
+    if (path.empty() || id.empty())
+        return string();
+
+    if (section == Timestamp){
+        if (timestampMeta != NULL) return timestampMeta->getName();
+    }
+    else if (section == Monitor)
+        return getNameById(&monitormeta, path, id);
+    else
+        return getNameById(&chainmeta, path, id);
+
+    return string();
+}
+
+string IH5File::getNameById(vector<IMetaData *> *devlist, string path, string id){
+
+    for (vector<IMetaData *>::iterator it=devlist->begin(); it != devlist->end(); ++it){
+        IMetaData* mdat = *it;
+        if (mdat->getPath().find(path)==0){
+            if ((mdat->getId() == id) && (!mdat->getName().empty()))
+                return mdat->getName();
+        }
+    }
+    return string();
+}
+
+vector<MetaData *> IH5File::getMetaData(vector<IMetaData *> *devlist, string path, string id, string name){
     vector<MetaData *> result;
     if (path.size() == 0) {
         return result;
@@ -267,9 +296,15 @@ vector<MetaData *> IH5File::getMetaData(vector<IMetaData *> *devlist, string pat
 
     for (vector<IMetaData *>::iterator it=devlist->begin(); it != devlist->end(); ++it){
         IMetaData* mdat = *it;
-        if ((mdat->getId().find(filter)!=string::npos) && (mdat->getPath().find(path)==0)){
-            // cout << "filter: >" << filter << "< srcpath: " << mdat->getPath() << " searchpath: " << path << endl;
-            result.push_back(new IMetaData(*mdat));
+        if (mdat->getPath().find(path)==0){
+            if (id.length() > 0){
+                if (mdat->getId() == id) result.push_back(new IMetaData(*mdat));
+            }
+            else if (name.length() > 0){
+                if (mdat->getName() == name) result.push_back(new IMetaData(*mdat));
+            }
+            else
+                result.push_back(new IMetaData(*mdat));
         }
     }
     return result;

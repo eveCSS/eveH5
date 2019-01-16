@@ -9,7 +9,7 @@ QT       -= core gui
 TARGET = eveH5
 TEMPLATE = lib
 
-VERSION += 5.0
+VERSION += 6.0
 DEFINES += EVEH5_LIBRARY
 
 CONFIG += dll
