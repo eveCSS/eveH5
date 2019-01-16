@@ -21,7 +21,7 @@
  *
  * \subsection usage Usage
  * + Include eve.h in your application and link against the shared library
- * + EVEH5 supports EVEH5 layout from version 1 to version 5
+ * + EVEH5 supports EVEH5 layout from version 1 to version 6
  *
 */
 
@@ -361,13 +361,13 @@ public:
      */
     virtual void setChain(int chain)=0;
 
-    /** Retrieve a hash with metadata of selected chain as key/value pairs.
-     * \return return a key/value hash
+    /** Retrieve metadata of selected chain.
+     * \return return a ChainMetaData object
      */
     virtual ChainMetaData* getChainMetaData()=0;
 
-    /** Retrieve a hash with file metadata  as key/value pairs.
-     * \return return a key/value hash
+    /** Retrieve file metadata.
+     * \return return a FileMetaData object
      */
     virtual FileMetaData* getFileMetaData()=0;
 
