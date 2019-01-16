@@ -380,7 +380,7 @@ public:
      * @brief Retrieve metadata objects for the specified section in selected chain.
      * @param section
      * @param id if not empty, select metada with XML-ID id
-     * @param id if not empty, select metada with Name name
+     * @param name if not empty, select metada with Name name
      * @return MetaData list of metadata pointers
      */
     virtual std::vector<MetaData *> getMetaData(Section section, std::string id="", std::string name="")=0;

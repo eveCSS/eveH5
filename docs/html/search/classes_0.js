@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['data',['Data',['../classeve_1_1_data.html',1,'eve']]],
-  ['datafile',['DataFile',['../classeve_1_1_data_file.html',1,'eve']]]
+  ['chainmetadata',['ChainMetaData',['../classeve_1_1_chain_meta_data.html',1,'eve']]]
 ];

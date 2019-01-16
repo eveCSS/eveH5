@@ -1,5 +1,8 @@
 var searchData=
 [
+  ['detinterval',['DETinterval',['../namespaceeve.html#a5a0d22c3037a2aeab0416bbf6ecab07da41ee27e0078ccfa0e8bbb82d7fcee22e',1,'eve']]],
+  ['detstandard',['DETstandard',['../namespaceeve.html#a5a0d22c3037a2aeab0416bbf6ecab07daeea52b26e95ecc13adf2a055a4fbe832',1,'eve']]],
+  ['detunknown',['DETunknown',['../namespaceeve.html#a5a0d22c3037a2aeab0416bbf6ecab07da1a8b6db8d428c79d9f38d606794877c6',1,'eve']]],
   ['dtfloat32',['DTfloat32',['../namespaceeve.html#af38e49a8d9e1b5b93afba4127080b517a8635715196fd76ace7ec7d4976803609',1,'eve']]],
   ['dtfloat64',['DTfloat64',['../namespaceeve.html#af38e49a8d9e1b5b93afba4127080b517a1f05f1a7a4be149e22e57d0a91f606bf',1,'eve']]],
   ['dtint16',['DTint16',['../namespaceeve.html#af38e49a8d9e1b5b93afba4127080b517a535f76200216e98f34b4c10405cc4a4a',1,'eve']]],
