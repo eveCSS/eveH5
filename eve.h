@@ -34,8 +34,8 @@ namespace eve {
 enum FillRule
 {
     NoFill,     /**< use only columns with the same position reference */
-    LastFill,   /**< fill in the last position if an axis has no value at the specified position reference (assume the axis hasn't moved) */
-    NANFill,    /**< fill in NaN, if a channel has no value at the specified position reference*/
+    LastFill,   /**< fill in the last known position, if an axis has no value at the specified position reference (assume the axis hasn't moved). Use snapshot data, if necessary to find the last axis position */
+    NANFill,    /**< fill in NaN, if a channel has no value at the specified position reference */
     LastNANFill /**< do LastFill and NANFill */
 };
 
@@ -397,7 +397,8 @@ public:
      * May be used to create table data from single data objects. All data will have the
      * same number of values and my be merged into a table. Depending on the fill rule,
      * missing values will be added or all data objects are reduced to rows
-     * existent in evey dataset.
+     * existent in evey dataset. If the metadatalist contains snapshot data, this metadata
+     * is used to find the last axis position for fill rules LastFill/LastNANFill
      *
      * \param metadatalist list of metadata to retrieve data for
      * \param fill desired fill rule
