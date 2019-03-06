@@ -310,7 +310,7 @@ Static Public Member Functions</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>Retrieve joined data for given metada. Transforms a list of data objects to data objects with corresponding rows. May be used to create table data from single data objects. All data will have the same number of values and my be merged into a table. Depending on the fill rule, missing values will be added or all data objects are reduced to rows existent in evey dataset.</p>
+<p>Retrieve joined data for given metada. Transforms a list of data objects to data objects with corresponding rows. May be used to create table data from single data objects. All data will have the same number of values and my be merged into a table. Depending on the fill rule, missing values will be added or all data objects are reduced to rows existent in evey dataset. If the metadatalist contains snapshot data, this metadata is used to find the last axis position for fill rules LastFill/LastNANFill</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">metadatalist</td><td>list of metadata to retrieve data for </td></tr>
@@ -547,7 +547,7 @@ Static Public Member Functions</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Jan 16 2019 12:48:35 for eve Data Interface by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Mar 6 2019 16:56:44 for eve Data Interface by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.14
 </small></address>
