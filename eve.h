@@ -34,8 +34,8 @@ namespace eve {
 enum FillRule
 {
     NoFill,     /**< use only columns with the same position reference */
-    LastFill,   /**< fill in the last position if an axis has no value at the specified position reference (assume the axis hasn't moved) */
-    NANFill,    /**< fill in NaN, if a channel has no value at the specified position reference*/
+    LastFill,   /**< fill in the last known position, if an axis has no value at the specified position reference (assume the axis hasn't moved). Use snapshot data, if necessary to find the last axis position */
+    NANFill,    /**< fill in NaN, if a channel has no value at the specified position reference */
     LastNANFill /**< do LastFill and NANFill */
 };
 
