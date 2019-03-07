@@ -72,6 +72,7 @@ IData::IData(IData& data, vector<int> posrefs, FillRule fillType, IData* snapdat
 
         unsigned int idx=0;
         unsigned int pcidx=0;
+        set<int> dPosCounts (data.posCounts.begin(), data.posCounts.end());
         for (int newpc : posrefs){
             while((data.posCounts[idx] < newpc) && (idx < (data.posCounts.size()-1))) ++idx;
             if (data.posCounts[idx] == newpc) {
@@ -87,26 +88,46 @@ IData::IData(IData& data, vector<int> posrefs, FillRule fillType, IData* snapdat
                     strsptrmap.at(j)->at(pcidx) = data.strsptrmap.at(j)->at(idx);
                     if (j == 0) laststring = data.strsptrmap.at(j)->at(idx);
                 }
-                ++idx;
+                if (idx < (data.posCounts.size()-1)) ++idx;
             }
-            else if (data.posCounts[idx] != newpc) {
-                int intval = INT_MIN;
-                double dblval = NAN;
-                string strval = "NaN";
-                for (int j : intarrs){
-                    if((j == 0) && ((fillType == LastFill) || (fillType == LastNANFill)) && (data.getDeviceType() == Axis)) intval = lastint;
-                    intsptrmap.at(j)->at(pcidx) = intval;
+            else {
+                // posCounts may be unsorted
+                if (dPosCounts.find(newpc) != dPosCounts.end()){
+                    for (unsigned int dindex = 0; dindex < data.posCounts.size(); ++dindex){
+                        if (data.posCounts[dindex] == newpc) {
+                            for (int j : intarrs){
+                                intsptrmap.at(j)->at(pcidx) = data.intsptrmap.at(j)->at(dindex);
+                                if (j == 0) lastint = data.intsptrmap.at(j)->at(dindex);
+                            }
+                            for (int j : dblarrs){
+                                dblsptrmap.at(j)->at(pcidx) = data.dblsptrmap.at(j)->at(dindex);
+                                if (j == 0) lastdbl = data.dblsptrmap.at(j)->at(dindex);
+                            }
+                            for (int j : strarrs){
+                                strsptrmap.at(j)->at(pcidx) = data.strsptrmap.at(j)->at(dindex);
+                                if (j == 0) laststring = data.strsptrmap.at(j)->at(dindex);
+                            }
+                        }
+                    }
                 }
-                for (int j : dblarrs){
-                    if((j == 0) && ((fillType == LastFill) || (fillType == LastNANFill)) && (data.getDeviceType() == Axis)) dblval = lastdbl;
-                    dblsptrmap.at(j)->at(pcidx) = dblval;
-                }
-                for (int j : strarrs){
-                    if((j == 0) && ((fillType == LastFill) || (fillType == LastNANFill)) && (data.getDeviceType() == Axis)) strval = laststring;
-                    strsptrmap.at(j)->at(pcidx) = strval;
+                else {
+                    int intval = INT_MIN;
+                    double dblval = NAN;
+                    string strval = "NaN";
+                    for (int j : intarrs){
+                        if((j == 0) && ((fillType == LastFill) || (fillType == LastNANFill)) && (data.getDeviceType() == Axis)) intval = lastint;
+                        intsptrmap.at(j)->at(pcidx) = intval;
+                    }
+                    for (int j : dblarrs){
+                        if((j == 0) && ((fillType == LastFill) || (fillType == LastNANFill)) && (data.getDeviceType() == Axis)) dblval = lastdbl;
+                        dblsptrmap.at(j)->at(pcidx) = dblval;
+                    }
+                    for (int j : strarrs){
+                        if((j == 0) && ((fillType == LastFill) || (fillType == LastNANFill)) && (data.getDeviceType() == Axis)) strval = laststring;
+                        strsptrmap.at(j)->at(pcidx) = strval;
+                    }
                 }
             }
-            if (idx >= data.posCounts.size()) --idx;
             ++pcidx;
         }
     }
