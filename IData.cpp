@@ -72,10 +72,40 @@ IData::IData(IData& data, vector<int> posrefs, FillRule fillType, IData* snapdat
 
         unsigned int idx=0;
         unsigned int pcidx=0;
-        set<int> dPosCounts (data.posCounts.begin(), data.posCounts.end());
+        set<unsigned int> doublePosCounts;
+        set<unsigned int> dPosCounts (data.posCounts.begin(), data.posCounts.end());
+        // check if workaround for doublePosCount is needed
+        if ((data.getDeviceType() == Axis) && (dPosCounts.size() != data.posCounts.size())){
+           cout << "Warning: posrefs for axis " << data.getId() << " are not unique, applying doublePosRef workaround" << endl;
+           set<unsigned int> dPC = dPosCounts;
+           for (int newpc : data.posCounts) {
+               if (dPC.erase(newpc) != 1) doublePosCounts.insert(newpc);
+            }
+        }
         for (int newpc : posrefs){
             while((data.posCounts[idx] < newpc) && (idx < (data.posCounts.size()-1))) ++idx;
-            if (data.posCounts[idx] == newpc) {
+            if (doublePosCounts.find(newpc) != doublePosCounts.end()) {
+                // apply workaround for doublePosCount
+                // take the last value if axis, take the first value if channel
+                for (int dindex = data.posCounts.size()-1; dindex >= 0; --dindex){
+                    if (data.posCounts[dindex] == newpc) {
+                        for (int j : intarrs){
+                            intsptrmap.at(j)->at(pcidx) = data.intsptrmap.at(j)->at(dindex);
+                            if (j == 0) lastint = data.intsptrmap.at(j)->at(dindex);
+                        }
+                        for (int j : dblarrs){
+                            dblsptrmap.at(j)->at(pcidx) = data.dblsptrmap.at(j)->at(dindex);
+                            if (j == 0) lastdbl = data.dblsptrmap.at(j)->at(dindex);
+                        }
+                        for (int j : strarrs){
+                            strsptrmap.at(j)->at(pcidx) = data.strsptrmap.at(j)->at(dindex);
+                            if (j == 0) laststring = data.strsptrmap.at(j)->at(dindex);
+                        }
+                        break;
+                    }
+                }
+            }
+            else if (data.posCounts[idx] == newpc) {
                 for (int j : intarrs){
                     intsptrmap.at(j)->at(pcidx) = data.intsptrmap.at(j)->at(idx);
                     if (j == 0) lastint = data.intsptrmap.at(j)->at(idx);
@@ -93,7 +123,7 @@ IData::IData(IData& data, vector<int> posrefs, FillRule fillType, IData* snapdat
             else {
                 // posCounts may be unsorted
                 if (dPosCounts.find(newpc) != dPosCounts.end()){
-                    for (unsigned int dindex = 0; dindex < data.posCounts.size(); ++dindex){
+                   for (unsigned int dindex = 0; dindex < data.posCounts.size(); ++dindex){
                         if (data.posCounts[dindex] == newpc) {
                             for (int j : intarrs){
                                 intsptrmap.at(j)->at(pcidx) = data.intsptrmap.at(j)->at(dindex);
@@ -107,6 +137,7 @@ IData::IData(IData& data, vector<int> posrefs, FillRule fillType, IData* snapdat
                                 strsptrmap.at(j)->at(pcidx) = data.strsptrmap.at(j)->at(dindex);
                                 if (j == 0) laststring = data.strsptrmap.at(j)->at(dindex);
                             }
+                            break;
                         }
                     }
                 }
