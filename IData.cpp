@@ -33,8 +33,10 @@ IData::IData(IData& data, vector<int> posrefs, FillRule fillType, IData* snapdat
         int lastint = INT_MIN;
         double lastdbl = NAN;
         string laststring = "NaN";
+        bool dofill = false;
 
         if (((fillType == LastFill) || (fillType == LastNANFill)) && (data.getDeviceType() == Axis)){
+            dofill = true;
             if ((snapdata != NULL) && (!snapdata->isArrayData())) {
                 vector<int> snap_pc = snapdata->getPosReferences();
                 if ((snap_pc.size() > 0) && (posrefs.size() > 0) && (posrefs[0] > snap_pc[0])){
@@ -70,6 +72,8 @@ IData::IData(IData& data, vector<int> posrefs, FillRule fillType, IData* snapdat
             strsptrmap.insert(pair<int, shared_ptr<vector<string>>>(key, make_shared<vector<string>>(pcSize)));
         }
 
+        bool skippedValues = false;
+        bool doLast = false;
         unsigned int idx=0;
         unsigned int pcidx=0;
         set<unsigned int> doublePosCounts;
@@ -83,7 +87,33 @@ IData::IData(IData& data, vector<int> posrefs, FillRule fillType, IData* snapdat
             }
         }
         for (int newpc : posrefs){
-            while((data.posCounts[idx] < newpc) && (idx < (data.posCounts.size()-1))) ++idx;
+            skippedValues = false;
+            while((data.posCounts[idx] < newpc) && (idx < (data.posCounts.size()-1))) {
+                ++idx;
+                skippedValues = true;
+                if (idx == data.posCounts.size() - 1) doLast = true;
+            }
+            // adjust fill values
+            unsigned int lastidx = idx;
+            if (dofill && (skippedValues || (doLast && (data.posCounts[idx] < newpc)))){
+                if (skippedValues)
+                    lastidx = idx - 1;
+                else
+                    doLast = false;
+                if (doublePosCounts.find(data.posCounts[idx]) != doublePosCounts.end()) {
+                    for (int dindex = data.posCounts.size()-1; dindex >= 0; --dindex){
+                        if (data.posCounts[dindex] == data.posCounts[idx]) {
+                            lastidx = dindex;
+                            break;
+                        }
+                    }
+                }
+                if (intsptrmap.find(0) != intsptrmap.end()) lastint = data.intsptrmap.at(0)->at(lastidx);
+                if (dblsptrmap.find(0) != dblsptrmap.end()) lastdbl = data.dblsptrmap.at(0)->at(lastidx);
+                if (strsptrmap.find(0) != strsptrmap.end()) laststring = data.strsptrmap.at(0)->at(lastidx);
+
+            }
+
             if (doublePosCounts.find(newpc) != doublePosCounts.end()) {
                 // apply workaround for doublePosCount
                 // take the last value if axis, take the first value if channel
@@ -91,15 +121,15 @@ IData::IData(IData& data, vector<int> posrefs, FillRule fillType, IData* snapdat
                     if (data.posCounts[dindex] == newpc) {
                         for (int j : intarrs){
                             intsptrmap.at(j)->at(pcidx) = data.intsptrmap.at(j)->at(dindex);
-                            if (j == 0) lastint = data.intsptrmap.at(j)->at(dindex);
+                            if (dofill && (j == 0)) lastint = data.intsptrmap.at(j)->at(dindex);
                         }
                         for (int j : dblarrs){
                             dblsptrmap.at(j)->at(pcidx) = data.dblsptrmap.at(j)->at(dindex);
-                            if (j == 0) lastdbl = data.dblsptrmap.at(j)->at(dindex);
+                            if (dofill && (j == 0)) lastdbl = data.dblsptrmap.at(j)->at(dindex);
                         }
                         for (int j : strarrs){
                             strsptrmap.at(j)->at(pcidx) = data.strsptrmap.at(j)->at(dindex);
-                            if (j == 0) laststring = data.strsptrmap.at(j)->at(dindex);
+                            if (dofill && (j == 0)) laststring = data.strsptrmap.at(j)->at(dindex);
                         }
                         break;
                     }
@@ -108,17 +138,20 @@ IData::IData(IData& data, vector<int> posrefs, FillRule fillType, IData* snapdat
             else if (data.posCounts[idx] == newpc) {
                 for (int j : intarrs){
                     intsptrmap.at(j)->at(pcidx) = data.intsptrmap.at(j)->at(idx);
-                    if (j == 0) lastint = data.intsptrmap.at(j)->at(idx);
+                    if (dofill && (j == 0)) lastint = data.intsptrmap.at(j)->at(idx);
                 }
                 for (int j : dblarrs){
                     dblsptrmap.at(j)->at(pcidx) = data.dblsptrmap.at(j)->at(idx);
-                    if (j == 0) lastdbl = data.dblsptrmap.at(j)->at(idx);
+                    if (dofill && (j == 0)) lastdbl = data.dblsptrmap.at(j)->at(idx);
                 }
                 for (int j : strarrs){
                     strsptrmap.at(j)->at(pcidx) = data.strsptrmap.at(j)->at(idx);
-                    if (j == 0) laststring = data.strsptrmap.at(j)->at(idx);
+                    if (dofill && (j == 0)) laststring = data.strsptrmap.at(j)->at(idx);
                 }
-                if (idx < (data.posCounts.size()-1)) ++idx;
+                if (idx < (data.posCounts.size()-1)) {
+                    ++idx;
+                    if (idx == data.posCounts.size() - 1) doLast = true;
+                }
             }
             else {
                 // posCounts may be unsorted
@@ -127,15 +160,15 @@ IData::IData(IData& data, vector<int> posrefs, FillRule fillType, IData* snapdat
                         if (data.posCounts[dindex] == newpc) {
                             for (int j : intarrs){
                                 intsptrmap.at(j)->at(pcidx) = data.intsptrmap.at(j)->at(dindex);
-                                if (j == 0) lastint = data.intsptrmap.at(j)->at(dindex);
+                                if (dofill && (j == 0)) lastint = data.intsptrmap.at(j)->at(dindex);
                             }
                             for (int j : dblarrs){
                                 dblsptrmap.at(j)->at(pcidx) = data.dblsptrmap.at(j)->at(dindex);
-                                if (j == 0) lastdbl = data.dblsptrmap.at(j)->at(dindex);
+                                if (dofill && (j == 0)) lastdbl = data.dblsptrmap.at(j)->at(dindex);
                             }
                             for (int j : strarrs){
                                 strsptrmap.at(j)->at(pcidx) = data.strsptrmap.at(j)->at(dindex);
-                                if (j == 0) laststring = data.strsptrmap.at(j)->at(dindex);
+                                if (dofill && (j == 0)) laststring = data.strsptrmap.at(j)->at(dindex);
                             }
                             break;
                         }
@@ -146,15 +179,15 @@ IData::IData(IData& data, vector<int> posrefs, FillRule fillType, IData* snapdat
                     double dblval = NAN;
                     string strval = "NaN";
                     for (int j : intarrs){
-                        if((j == 0) && ((fillType == LastFill) || (fillType == LastNANFill)) && (data.getDeviceType() == Axis)) intval = lastint;
+                        if(dofill && (j == 0)) intval = lastint;
                         intsptrmap.at(j)->at(pcidx) = intval;
                     }
                     for (int j : dblarrs){
-                        if((j == 0) && ((fillType == LastFill) || (fillType == LastNANFill)) && (data.getDeviceType() == Axis)) dblval = lastdbl;
+                        if(dofill && (j == 0)) dblval = lastdbl;
                         dblsptrmap.at(j)->at(pcidx) = dblval;
                     }
                     for (int j : strarrs){
-                        if((j == 0) && ((fillType == LastFill) || (fillType == LastNANFill)) && (data.getDeviceType() == Axis)) strval = laststring;
+                        if(dofill && (j == 0)) strval = laststring;
                         strsptrmap.at(j)->at(pcidx) = strval;
                     }
                 }
