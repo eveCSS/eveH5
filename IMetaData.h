@@ -12,6 +12,10 @@
 #endif
 using namespace std;
 
+#ifdef WITH_GTEST
+class IMetaDataTest;
+#endif
+
 namespace eve {
 
 enum EVEDatasetType { EVEDSTUnknown, EVEDSTPCOneColumn, EVEDSTPCTwoColumn, EVEDSTArray};
@@ -59,6 +63,9 @@ protected:
 
     friend class IH5File;
     friend class IH5FileV5;
+#ifdef WITH_GTEST
+    friend class ::IMetaDataTest;
+#endif
 };
 } // namespace end
 

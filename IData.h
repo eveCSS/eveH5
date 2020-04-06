@@ -5,10 +5,15 @@
 #include <vector>
 #include <memory>
 #include <map>
+#include <set>
 #include "eve.h"
 #include "IMetaData.h"
 
 using namespace std;
+
+#ifdef WITH_GTEST
+class IDataTest;
+#endif
 
 namespace eve {
 
@@ -75,12 +80,22 @@ public:
 
 
 private:
+    bool doLastfill;
+    int lastint;
+    double lastdbl;
+    string laststring;
     vector<int> posCounts;
     map<int, shared_ptr<char>> posPtrHash;
     map<int, shared_ptr<vector<int>>> intsptrmap;
     map<int, shared_ptr<vector<double>>> dblsptrmap;
     map<int, shared_ptr<vector<string>>> strsptrmap;
+    void setNanOrLast(int index);
+    void loadLast(unsigned int index, IData& data);
+    set<unsigned int> doublePosCounts;
 
+#ifdef WITH_GTEST
+    friend class ::IDataTest;
+#endif
     friend class IH5File;
     friend class IH5FileV5;
 };

@@ -49,7 +49,12 @@ IMetaData::IMetaData(string basep, string calc, string h5n, Section section, map
     if (attributes.count("Name") > 0)
         name = attributes.find("Name")->second;
 
-    if (xmlId.empty()) xmlId = h5name;
+    if (xmlId.empty()) {
+        if (!channelId.empty())
+            xmlId = channelId;
+        else
+            xmlId = h5name;
+    }
 
     if (attributes.count("DeviceType") > 0) {
         string devtypestr = attributes.find("DeviceType")->second;
@@ -102,6 +107,8 @@ string IMetaData::getAttribute(string target, int substrnr){
                     retval = retval.substr(0, found);
                 else if (substrnr == 2)
                     retval = retval.substr(found+1, string::npos);
+                else
+                    retval = "";
                 }
               else
                 retval = "";

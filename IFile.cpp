@@ -112,7 +112,7 @@ void IFile::getH5Version(Group& rootgroup){
     Attribute versionattr;
     try {
         versionattr = rootgroup.openAttribute("EVEH5Version");
-        StrType stread = StrType(versionattr.getStrType());
+        StrType stread = versionattr.getStrType();
         string versionString;
         versionattr.read(stread, versionString);
         h5version = strtof(versionString.c_str(), NULL);
