@@ -207,6 +207,12 @@ public:
      */
     virtual std::string getScmlName()=0;
 
+    /** Returns true if file contains artificial data from simulated Scan
+     * \return bool value to indicate simulation status
+     */
+    virtual bool isSimulatedData()=0;
+
+
 };
 
 class ChainMetaData

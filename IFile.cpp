@@ -17,7 +17,7 @@ using namespace std;
      throw runtime_error(err.str()); }
 
 
-#define EVEH5VERSIONMAXIMUM 6.99
+#define EVEH5VERSIONMAXIMUM 7.99
 #define EVEH5VERSIONMINIMUM 1.0
 
 

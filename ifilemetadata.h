@@ -20,7 +20,7 @@ public:
     virtual std::string getEndTime(){return getEndTimeIso();};
     virtual std::string getScmlAuthor(){return getString("SCML-Author");};
     virtual std::string getScmlName(){return getString("SCML-Name");};
-
+    virtual bool isSimulatedData(){return (getString("Simulation").compare("yes") == 0);};
 };
 
 } // namespace end

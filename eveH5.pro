@@ -9,12 +9,12 @@ QT       -= core gui
 TARGET = eveH5
 TEMPLATE = lib
 
-VERSION += 6.0.3
+VERSION = 7
 DEFINES += EVEH5_LIBRARY
 
 CONFIG += dll
 
-QMAKE_CXXFLAGS += -std=c++11
+QMAKE_CXXFLAGS += -std=c++11 -fPIC
 
 SOURCES += \
     IFile.cpp \
@@ -47,11 +47,13 @@ HEADERS += \
 #    LIBS +=  -L/home/eden/src/hdf5/hdf5-1.8.9/hdf5/lib-static
 #}
 
-linux-g++-64 {
-    LIBS +=  -L/home/eden/src/hdf5/hdf5-1.10.1-gcc7/hdf5/lib64
+# Hier ignriert der Build-Prozess gerne die Pfade und nimmt libhdf5_cpp.a aus der Distro
+# Die sind aber nicht mit -fPIC compiliert.
+linux-g++ {
+    LIBS +=  -L/home/eden/src/hdf5/hdf5-1.12.1/hdf5/lib64
 }
 
-unix:INCLUDEPATH += /home/eden/src/hdf5/hdf5-1.10.1-gcc7/hdf5/include
+unix:INCLUDEPATH += /home/eden/src/hdf5/hdf5-1.12.1/hdf5/include
 
 LIBS +=  -l:libhdf5_cpp.a -l:libhdf5.a -lz
 
