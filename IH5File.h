@@ -70,6 +70,7 @@ protected:
     virtual void parseGroupDatasets(Group& group, string prefix, vector<IMetaData*>& imeta, string calctype, Section section);
     map<string, string> getH5Attributes(H5Object &);
     bool haveGroupWithName(Group& group, string name);
+    bool insertData(IData* data, int idx, char* memptr, int element_size, bool insert);
     string getNameById(vector<IMetaData *> *devlist, string path, string id);
     H5File h5file;
     IMetaData* timestampMeta;

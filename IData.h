@@ -91,7 +91,7 @@ private:
     map<int, shared_ptr<vector<string>>> strsptrmap;
     void setNanOrLast(int index);
     void loadLast(unsigned int index, IData& data);
-    set<unsigned int> doublePosCounts;
+//    set<unsigned int> doublePosCounts;
 
 #ifdef WITH_GTEST
     friend class ::IDataTest;

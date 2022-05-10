@@ -552,9 +552,78 @@ void IH5File::readDataArray(IData* data){
 
 }
 
+bool IH5File::insertData(IData* data, int idx, char* memptr, int element_size, bool insert){
+
+    if (insert){
+        if (data->datatype == DTint32) {
+            data->intsptrmap.at(INTVECT1)->insert(next(data->intsptrmap.at(INTVECT1)->begin(),idx),  *((int*)(memptr + 4)));
+        }
+        else if (data->datatype == DTuint32) {
+            data->intsptrmap.at(INTVECT1)->insert(next(data->intsptrmap.at(INTVECT1)->begin(),idx),  (int)*((unsigned int*)(memptr + 4)));
+        }
+        else if (data->datatype == DTint8) {
+            data->intsptrmap.at(INTVECT1)->insert(next(data->intsptrmap.at(INTVECT1)->begin(),idx),  (int)*(memptr + 4));
+        }
+        else if (data->datatype == DTuint8) {
+            data->intsptrmap.at(INTVECT1)->insert(next(data->intsptrmap.at(INTVECT1)->begin(),idx),  (int)*((unsigned char*)(memptr + 4)));
+        }
+        else if (data->datatype == DTint16) {
+            data->intsptrmap.at(INTVECT1)->insert(next(data->intsptrmap.at(INTVECT1)->begin(),idx),  (int)*((short*)(memptr + 4)));
+        }
+        else if (data->datatype == DTuint16) {
+            data->intsptrmap.at(INTVECT1)->insert(next(data->intsptrmap.at(INTVECT1)->begin(),idx),  (int)*((unsigned short*)(memptr + 4)));
+        }
+        else if (data->datatype == DTfloat32) {
+            data->dblsptrmap.at(DBLVECT1)->insert(next(data->dblsptrmap.at(DBLVECT1)->begin(),idx),  ((double)*((float*)(memptr + 4))));
+        }
+        else if (data->datatype == DTfloat64) {
+            data->dblsptrmap.at(DBLVECT1)->insert(next(data->dblsptrmap.at(DBLVECT1)->begin(),idx),  *((double*)(memptr + 4)));
+        }
+        else if (data->datatype == DTstring) {
+            string tmpstring(memptr + 4, element_size-4);
+            data->strsptrmap.at(STRVECT1)->insert(next(data->strsptrmap.at(STRVECT1)->begin(),idx),  string(tmpstring.c_str()));
+        }
+        else
+            return  true;
+    }
+    else {
+        if (data->datatype == DTint32) {
+            data->intsptrmap.at(INTVECT1)->at(idx) = *((int*)(memptr + 4));
+        }
+        else if (data->datatype == DTuint32) {
+            data->intsptrmap.at(INTVECT1)->at(idx) = (int)*((unsigned int*)(memptr + 4));
+        }
+        else if (data->datatype == DTint8) {
+            data->intsptrmap.at(INTVECT1)->at(idx) = (int)*(memptr + 4);
+        }
+        else if (data->datatype == DTuint8) {
+            data->intsptrmap.at(INTVECT1)->at(idx) = (int)*((unsigned char*)(memptr + 4));
+        }
+        else if (data->datatype == DTint16) {
+            data->intsptrmap.at(INTVECT1)->at(idx) = (int)*((short*)(memptr + 4));
+        }
+        else if (data->datatype == DTuint16) {
+            data->intsptrmap.at(INTVECT1)->at(idx) = (int)*((unsigned short*)(memptr + 4));
+        }
+        else if (data->datatype == DTfloat32) {
+            data->dblsptrmap.at(DBLVECT1)->at(idx) = ((double)*((float*)(memptr + 4)));
+        }
+        else if (data->datatype == DTfloat64) {
+            data->dblsptrmap.at(DBLVECT1)->at(idx) = *((double*)(memptr + 4));
+        }
+        else if (data->datatype == DTstring) {
+            string tmpstring(memptr + 4, element_size-4);
+            data->strsptrmap.at(STRVECT1)->at(idx) = string(tmpstring.c_str());
+        }
+        else
+            return true;
+    }
+    return false;
+}
+
 void IH5File::readDataPCOneCol(IData* data){
 
-    if ((data->datatype == DTunknown)) STHROW("unsupported datatype");
+    if (data->datatype == DTunknown) STHROW("unsupported datatype");
 
     hsize_t dims_out[2];
     size_t element_size;
@@ -631,49 +700,64 @@ void IH5File::readDataPCOneCol(IData* data){
         data->intsptrmap.insert(pair<int, shared_ptr<vector<int>>>(INTVECT1, make_shared<vector<int>>(dims_out[0])));
 
     bool typeerror = false;
-    char *memptr = (char*)memBuffer;
+    char *memptr;
+    int highestPosCount = -1;
+    bool negativeError = false;
+    bool doublePCError = false;
+    char *base_memptr = (char*)memBuffer;
+    int newdim = 0;
     for (unsigned int i = 0; i < dims_out[0]; ++i){
-        data->posCounts.push_back(*((int*)memptr));
-        if (data->datatype == DTint32) {
-            data->intsptrmap.at(INTVECT1)->at(i) = *((int*)(memptr + 4));
-//            data->intvect.push_back(*((int*)(memptr + 4)));
-        }
-        else if (data->datatype == DTuint32) {
-            data->intsptrmap.at(INTVECT1)->at(i) = (int)*((unsigned int*)(memptr + 4));
-        }
-        else if (data->datatype == DTint8) {
-            data->intsptrmap.at(INTVECT1)->at(i) = (int)*(memptr + 4);
-//            data->intvect.push_back((int)*(memptr + 4));
-        }
-        else if (data->datatype == DTuint8) {
-            data->intsptrmap.at(INTVECT1)->at(i) = (int)*((unsigned char*)(memptr + 4));
-//            data->intvect.push_back((int)*((unsigned char*)(memptr + 4)));
-        }
-        else if (data->datatype == DTint16) {
-            data->intsptrmap.at(INTVECT1)->at(i) = (int)*((short*)(memptr + 4));
-//            data->intvect.push_back((int)*((short*)(memptr + 4)));
-        }
-        else if (data->datatype == DTuint16) {
-            data->intsptrmap.at(INTVECT1)->at(i) = (int)*((unsigned short*)(memptr + 4));
-//            data->intvect.push_back((int)*((unsigned short*)(memptr + 4)));
-        }
-        else if (data->datatype == DTfloat32) {
-            data->dblsptrmap.at(DBLVECT1)->at(i) = ((double)*((float*)(memptr + 4)));
-        }
-        else if (data->datatype == DTfloat64) {
-            data->dblsptrmap.at(DBLVECT1)->at(i) = *((double*)(memptr + 4));
-        }
-        else if (data->datatype == DTstring) {
-            string tmpstring(memptr + 4, element_size-4);
-            data->strsptrmap.at(STRVECT1)->at(i) = string(tmpstring.c_str());
-        }
-        else
-            typeerror = true;
+        memptr = base_memptr + (element_size * i);
+        int posCount = *((int*)memptr);
 
-        memptr += element_size;
+        if (posCount < 0) {
+            negativeError = true;
+            continue;
+        }
+
+        if (posCount <= highestPosCount) {
+            // find correct position for sorted posCounts
+            int idx = 0;
+            while (data->posCounts.at(idx) < posCount) {++idx;}
+
+            if (data->posCounts.at(idx) == posCount){
+                doublePCError = true;
+                if (data->getDeviceType() == Axis){
+                    // replace at idx
+                    typeerror = insertData(data, idx, memptr, element_size, false);
+                }
+            }
+            else {
+                // insert at idx
+                data->posCounts.insert(next(data->posCounts.begin(),idx), posCount);
+                typeerror = insertData(data,idx, memptr, element_size, true);
+                ++newdim;
+            }
+        }
+        else {
+            // replace at newdim
+            // TODO
+            data->posCounts.push_back(posCount);
+            typeerror = insertData(data,newdim, memptr, element_size, false);
+            ++newdim;
+            highestPosCount = posCount;
+        }
     }
+    if (negativeError)
+        cout << "Warning: Skipped values with negative PosCounter" << endl;
+    if (doublePCError)
+        cout << "Warning: posrefs for axis " << data->getId() << " are not unique, applied doublePosRef workaround" << endl;
+    if (typeerror)
+        STHROW("Unable to read data: unknown datatype" );
+
+    if (data->datatype == DTstring)
+        data->strsptrmap.at(STRVECT1)->resize(newdim);
+    else if ((data->datatype == DTfloat64) || (data->datatype == DTfloat32))
+        data->dblsptrmap.at(DBLVECT1)->resize(newdim);
+    else
+        data->intsptrmap.at(INTVECT1)->resize(newdim);
     free(memBuffer);
-    if (typeerror) STHROW("Unable to read data: unknown DataSet type");
+
 }
 
 void IH5File::readDataPCTwoCol(IData* data){
@@ -725,8 +809,6 @@ void IH5File::readDataPCTwoCol(IData* data){
         STHROW("Unknown error while reading DataSet: " << objname);
     }
 
-    char *memptr = (char*)memBuffer;
-
     if (data->datatype == DTint32){
         data->intsptrmap.insert(pair<int, shared_ptr<vector<int>>>(INTVECT1, make_shared<vector<int>>(dims_out[0])));
         data->intsptrmap.insert(pair<int, shared_ptr<vector<int>>>(INTVECT2, make_shared<vector<int>>(dims_out[0])));
@@ -735,30 +817,86 @@ void IH5File::readDataPCTwoCol(IData* data){
         data->dblsptrmap.insert(pair<int, shared_ptr<vector<double>>>(DBLVECT1, make_shared<vector<double>>(dims_out[0])));
         data->dblsptrmap.insert(pair<int, shared_ptr<vector<double>>>(DBLVECT2, make_shared<vector<double>>(dims_out[0])));
     }
+
+    int highestPosCount = -1;
+    bool negativeError = false;
+    bool doublePCError = false;
+    char *memptr;
+    char *base_memptr = (char*)memBuffer;
+    int newdim = 0;
     for (unsigned int i = 0; i < dims_out[0]; ++i){
-        int posCount=*((int*)memptr);
-        data->posCounts.push_back(posCount);
-        if (data->datatype == DTint32){
-            int target;
-            memcpy((void*)&target, memptr + 4, 4);
-            data->intsptrmap.at(INTVECT1)->at(i) = target;
-            //data->intsptrmap.at(INTVECT1).push_back(target);
-            memcpy((void*)&target, memptr + 8, 4);
-            //data->intvect2.push_back(target);
-            data->intsptrmap.at(INTVECT2)->at(i) = target;
+        memptr = base_memptr + (element_size * i);
+        int posCount = *((int*)memptr);
+
+        if (posCount < 0) {
+            negativeError = true;
+            continue;
+        }
+
+        if (posCount <= highestPosCount) {
+            // find correct position for sorted posCounts
+            int idx = 0;
+            while (data->posCounts.at(idx) < posCount) {++idx;}
+
+            if (data->posCounts.at(idx) == posCount){
+                doublePCError = true;
+            }
+            else {
+                // insert at idx
+                data->posCounts.insert(next(data->posCounts.begin(),idx), posCount);
+                if (data->datatype == DTint32){
+                    int target;
+                    memcpy((void*)&target, memptr + 4, 4);
+                    data->intsptrmap.at(INTVECT1)->insert(next(data->intsptrmap.at(INTVECT1)->begin(),idx),  target);
+                    memcpy((void*)&target, memptr + 8, 4);
+                    data->intsptrmap.at(INTVECT2)->insert(next(data->intsptrmap.at(INTVECT2)->begin(),idx), target);
+                }
+                else {
+                    double target;
+                    memcpy((void*)&target, memptr + 4, 8);
+                    data->dblsptrmap.at(DBLVECT1)->insert(next(data->dblsptrmap.at(DBLVECT1)->begin(),idx),  target);
+                    memcpy((void*)&target, memptr + 12, 8);
+                    data->dblsptrmap.at(DBLVECT2)->insert(next(data->dblsptrmap.at(DBLVECT2)->begin(),idx),  target);
+                }
+                ++newdim;
+            }
         }
         else {
-            double target;
-            memcpy((void*)&target, memptr + 4, 8);
-            // data->dblvect.push_back(target);
-            data->dblsptrmap.at(DBLVECT1)->at(i) = target;
-            memcpy((void*)&target, memptr + 12, 8);
-            // data->dblvect2.push_back(target);
-            data->dblsptrmap.at(DBLVECT2)->at(i) = target;
+            // replace at newdim
+            data->posCounts.push_back(posCount);
+            if (data->datatype == DTint32){
+                int target;
+                memcpy((void*)&target, memptr + 4, 4);
+                data->intsptrmap.at(INTVECT1)->at(newdim) = target;
+                memcpy((void*)&target, memptr + 8, 4);
+                data->intsptrmap.at(INTVECT2)->at(newdim) = target;
+            }
+            else {
+                double target;
+                memcpy((void*)&target, memptr + 4, 8);
+                data->dblsptrmap.at(DBLVECT1)->at(newdim) = target;
+                memcpy((void*)&target, memptr + 12, 8);
+                data->dblsptrmap.at(DBLVECT2)->at(newdim) = target;
+            }
+            ++newdim;
+            highestPosCount = posCount;
         }
-        memptr += element_size;
+    }
+    if (negativeError)
+        cout << "Warning: Skipped values with negative PosCounter" << endl;
+    if (doublePCError)
+        cout << "Warning: PosCounter not unique; applied double poscounter workaround" << endl;
+
+    if (data->datatype == DTint32){
+        data->intsptrmap.at(INTVECT1)->resize(newdim);
+        data->intsptrmap.at(INTVECT2)->resize(newdim);
+    }
+    else {
+        data->dblsptrmap.at(DBLVECT1)->resize(newdim);
+        data->dblsptrmap.at(DBLVECT2)->resize(newdim);
     }
     free(memBuffer);
+
 }
 
 void IH5File::addExtensionData(IData* data){

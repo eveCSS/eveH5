@@ -29,12 +29,13 @@ IData::IData(IData& data, vector<int> posrefs, FillRule fillType, IData* snapdat
         set<int> dblarrs;
         set<int> strarrs;
         int pcSize = posrefs.size();
-        lastint = INT_MIN;
+        lastint = INT_MIN;                                // darf nur bei doLastFill verändert werden
         lastdbl = NAN;
         laststring = "NaN";
         doLastfill = false;
         unsigned int snapidx=0, srcidx=0;
         int tgtpos=0, snappos=0, srcpos= 0;
+        int lastLoaded = 0;
         bool snapAtEnd = true;
         bool srcAtEnd = true;
         vector<int>& src = data.posCounts;
@@ -62,51 +63,45 @@ IData::IData(IData& data, vector<int> posrefs, FillRule fillType, IData* snapdat
         if (src.size() > 0) srcAtEnd = false;
         if (snap.size() > 0) snapAtEnd = false;
 
-        set<unsigned int> dPosCounts(data.posCounts.begin(), data.posCounts.end());
-        // find double poscount values to apply doublePosCount workaround
-        if ((data.getDeviceType() == Axis) && (dPosCounts.size() != data.posCounts.size())){
-           cout << "Warning: posrefs for axis " << data.getId() << " are not unique, applying doublePosRef workaround" << endl;
-           set<unsigned int> dPC = dPosCounts;
-           for (int newpc : data.posCounts) {
-               if (dPC.erase(newpc) != 1) doublePosCounts.insert(newpc);
-            }
-        }
-
         for (unsigned int tgtidx=0; tgtidx < posrefs.size(); ++tgtidx){
             tgtpos = posrefs[tgtidx];
             if (!srcAtEnd) srcpos = src[srcidx];
-            if (srcpos < 0) srcpos = 0;
             if (!snapAtEnd) snappos = snap[snapidx];
-            if (snappos < 0) snappos = 0;
+
+            // check if snapshot positions should be loaded as Lastfill value
+            while ((tgtpos > snappos) && !snapAtEnd && doLastfill) {
+                //  load the snapshot positions to fill lastPosition
+                if (snappos > lastLoaded) {
+                    loadLast(snapidx, *snapdata);
+                    lastLoaded = snappos;
+                }
+                ++ snapidx;
+                if (snapidx >= snap.size()) {
+                    --snapidx;
+                    snapAtEnd = true;
+                }
+                snappos = snap[snapidx];
+            }
+
+            // check if previous positions should be loaded as Lastfill value
+            while ((tgtpos > srcpos) && !srcAtEnd) {
+                    if (doLastfill && (srcpos >= lastLoaded)) {
+                        loadLast(srcidx, data);
+                        lastLoaded = srcpos;
+                    }
+                    ++ srcidx;
+                    if (srcidx >= src.size()) {
+                        --srcidx;
+                        srcAtEnd = true;
+                    }
+                    srcpos = src[srcidx];
+            }
 
             if (tgtpos < srcpos) {
-                if (doLastfill) {
-                    while ((tgtpos > snappos) && !snapAtEnd) {
-                        loadLast(snapidx, *snapdata);
-                        ++snapidx;
-                        if (snapidx >= snap.size()) {
-                            --snapidx;
-                            snapAtEnd = true;
-                            break;
-                        }
-                        snappos = snap[snapidx];
-                    }
-                }
                 setNanOrLast(tgtidx);
             }
             else if (tgtpos == srcpos){
                 unsigned int usedindex = srcidx;
-                // apply workaround for doublePosCount
-                // take the last value for axes
-                if ((data.getDeviceType() == Axis) &&
-                                (doublePosCounts.find(data.posCounts[srcidx]) != doublePosCounts.end())) {
-                    for (unsigned int dindex = data.posCounts.size()-1; dindex > srcidx; --dindex){
-                        if (data.posCounts[dindex] == data.posCounts[srcidx]) {
-                            usedindex = dindex;
-                            break;
-                        }
-                    }
-                }
                 for (int j : intarrs){
                     intsptrmap.at(j)->at(tgtidx) = data.intsptrmap.at(j)->at(usedindex);
                     if (doLastfill && (j == 0)) lastint = data.intsptrmap.at(j)->at(usedindex);
@@ -124,72 +119,11 @@ IData::IData(IData& data, vector<int> posrefs, FillRule fillType, IData* snapdat
                     --srcidx;
                     srcAtEnd = true;
                 }
-                // skip non-monotone values
-                 while (src[srcidx] < srcpos){
-                     if (doublePosCounts.find(src[srcidx]) == doublePosCounts.end())
-                         cout << "Error: posrefs for axis " << data.getId() << " are not monotone, skip value" << endl;
-                     if (srcAtEnd) {
-                         --srcidx;
-                         break;
-                     }
-                     ++ srcidx;
-                     if (srcidx >= src.size()) {
-                         --srcidx;
-                         srcAtEnd = true;
-                     }
-                 }
             }
             else if (tgtpos > srcpos) {
-                if (doLastfill) {
-                    while (((tgtpos > snappos) && !snapAtEnd) || ((tgtpos > srcpos) && !srcAtEnd))  {
-                        if ((snappos < srcpos) && !snapAtEnd){
-                            loadLast(snapidx, *snapdata);
-                            ++ snapidx;
-                            if (snapidx >= snap.size()) {
-                                --snapidx;
-                                snapAtEnd = true;
-                            }
-                            snappos = snap[snapidx];
-                        }
-                        else if (!srcAtEnd) {
-                            loadLast(srcidx, data); // setLast macht workaround for doublePosCount
-                            ++ srcidx;
-                            if (srcidx >= src.size()) {
-                                --srcidx;
-                                srcAtEnd = true;
-                            }
-                           // skip non-monotone values
-                            while (src[srcidx] < srcpos){
-                                if (doublePosCounts.find(src[srcidx]) == doublePosCounts.end())
-                                    cout << "Error: posrefs for axis " << data.getId() << " are not monotone, skip value" << endl;
-                                if (srcAtEnd) {
-                                    --srcidx;
-                                    break;
-                                }
-                                ++ srcidx;
-                                if (srcidx >= src.size()) {
-                                    --srcidx;
-                                    srcAtEnd = true;
-                                }
-                            }
-                            srcpos = src[srcidx];
-                        }
-                        // ((tgtpos > snappos) && !snapAtEnd) => true
-                        else {
-                            loadLast(snapidx, *snapdata);
-                            ++ snapidx;
-                            if (snapidx >= snap.size()) {
-                                --snapidx;
-                                snapAtEnd = true;
-                            }
-                            snappos = snap[snapidx];
-                        }
-                    }
-                }
                 setNanOrLast(tgtidx);
             }
         }
-
     }
     else {
         set<int> setposrefs(posrefs.begin(), posrefs.end());
@@ -233,20 +167,9 @@ void IData::setNanOrLast(int index)
 
 void IData::loadLast(unsigned int index, IData& data)
 {
-    unsigned int usedindex = index;
-    // apply workaround for doublePosCount
-    // take the last value for axes
-    if (doublePosCounts.find(data.posCounts[index]) != doublePosCounts.end()) {
-        for (unsigned int dindex = data.posCounts.size()-1; dindex > index; --dindex){
-            if (data.posCounts[dindex] == data.posCounts[index]) {
-                usedindex = dindex;
-                break;
-            }
-        }
-    }
-    if (intsptrmap.find(0) != intsptrmap.end()) lastint = data.intsptrmap.at(0)->at(usedindex);
-    if (dblsptrmap.find(0) != dblsptrmap.end()) lastdbl = data.dblsptrmap.at(0)->at(usedindex);
-    if (strsptrmap.find(0) != strsptrmap.end()) laststring = data.strsptrmap.at(0)->at(usedindex);
+    if (intsptrmap.find(0) != intsptrmap.end()) lastint = data.intsptrmap.at(0)->at(index);
+    if (dblsptrmap.find(0) != dblsptrmap.end()) lastdbl = data.dblsptrmap.at(0)->at(index);
+    if (strsptrmap.find(0) != strsptrmap.end()) laststring = data.strsptrmap.at(0)->at(index);
 }
 void* IData::getArrayDataPointer(unsigned int row)
 {

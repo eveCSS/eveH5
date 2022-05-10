@@ -21,7 +21,7 @@
  *
  * \subsection usage Usage
  * + Include eve.h in your application and link against the shared library
- * + EVEH5 supports EVEH5 layout from version 1 to version 6
+ * + EVEH5 supports EVEH5 layout from version 1 to current version
  *
 */
 
