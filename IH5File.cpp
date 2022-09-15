@@ -181,9 +181,9 @@ void IH5File::chainInventory(){
     chainAttributes = getH5Attributes(chain);
 
     for (IMetaData* mdata : chainmeta) delete mdata;
-    chainmeta.empty();
+    chainmeta.clear();
     for (IMetaData* mdata : extensionmeta) delete mdata;
-    extensionmeta.empty();
+    extensionmeta.clear();
 
     chainTSfullname = path + "/" + chainTSfullname;
     if (timestampMeta != NULL) delete timestampMeta;
@@ -699,6 +699,8 @@ void IH5File::readDataPCOneCol(IData* data){
     else
         data->intsptrmap.insert(pair<int, shared_ptr<vector<int>>>(INTVECT1, make_shared<vector<int>>(dims_out[0])));
 
+    bool doSort = true;                                   // sort all values with posrefs
+    if (data->getSection() == Monitor) doSort = false;    // don't sort monitor data
     bool typeerror = false;
     char *memptr;
     int highestPosCount = -1;
@@ -710,12 +712,12 @@ void IH5File::readDataPCOneCol(IData* data){
         memptr = base_memptr + (element_size * i);
         int posCount = *((int*)memptr);
 
-        if (posCount < 0) {
+        if (doSort && (posCount < 0)) {
             negativeError = true;
             continue;
         }
 
-        if (posCount <= highestPosCount) {
+        if (doSort && (posCount <= highestPosCount)) {
             // find correct position for sorted posCounts
             int idx = 0;
             while (data->posCounts.at(idx) < posCount) {++idx;}
