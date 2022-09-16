@@ -1,6 +1,7 @@
 #ifndef ATTRIBUTEMETADATA_H
 #define ATTRIBUTEMETADATA_H
 
+#include <string>
 #include <map>
 
 using namespace std;
