@@ -81,9 +81,13 @@ vector<string> IH5FileV5::getLogData(){
     if(!H5Tequal(native_type, tid1.getId()))
         cerr << "get LiveComment: native type is not var length string!!!" << endl;
 
-    char *rdata[dims];   /* Information read in */
+    size_t element_size = h5dtype.getSize();
+
+
+    void* memBuffer = malloc(element_size * dims);
+    char **rdata = (char **)memBuffer;   /* Information read in */
     try {
-        h5dset.read((void*)rdata, h5dtype);
+        h5dset.read(memBuffer, h5dtype);
     }
     catch (Exception error) {
         stringlist.push_back("error reading LiveComment");
